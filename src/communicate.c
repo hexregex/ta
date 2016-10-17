@@ -55,6 +55,10 @@ void send_command(int pipe, char *command) {
 }
 
 
+/* pass a pointer to a string because when I was just passing a string
+   realloc would change the address stored in the character pointer
+   so command from the calling routing (who's address pointed to remained
+   unchanged) would end up pointing to unallocated memory and seg fault. */
 void recv_command(int pipe, char **command)
 {
     log_write("recv_command");
