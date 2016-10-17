@@ -11,6 +11,10 @@ void input (int *read, int *write) {
 
 
     while (1) {
+
+      /* TODO: Figure out how to gracefully terminate this process
+         when SIGTERM in recieved. */
+
       key = getch();
 
       log_write("input");

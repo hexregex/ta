@@ -8,6 +8,10 @@
 static const int BUFFER_SIZE = 100;
 static FILE *log;
 
+/* Create a pipe.  'read' points to an int which is given the value of the
+   file descriptor used to read from the pipe.  'write' points to an int which
+   is given the value of the file descriptor used to write to the pipe.
+   to the pipe with. */
 void connect(int *read, int *write)
 {
   /* file descriptors */;
@@ -41,6 +45,8 @@ void send_command(int pipe, char *command) {
     log_write("send_command_fprintf");
     fprintf(stream, command);
     log_write("after_fprintf");
+
+    /* TODO: Figure this out. */
     /* if I run this then the next time around stream is assigned null
 
        from fdopen() call */
@@ -51,9 +57,6 @@ void send_command(int pipe, char *command) {
 
 void recv_command(int pipe, char **command)
 {
-
-
-
     log_write("recv_command");
 
 
@@ -88,6 +91,7 @@ void recv_command(int pipe, char **command)
     free(buffer);
 }
 
+/* Write a string to the log file. */
 int log_write(char *log_message)
 {
   int count;
@@ -99,6 +103,7 @@ int log_write(char *log_message)
 }
 
 
+/* Convert an int to a string and write to the log file. */
 int log_write_int(int value)
 {
   int count;
@@ -108,4 +113,3 @@ int log_write_int(int value)
   count = log_write(log_message);
   return count;
 }
-
