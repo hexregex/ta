@@ -38,14 +38,16 @@ int main (int argc, char* argv[])
   pid_t input_pid = fork_me(&input, NULL, &write);
   /*pid_t output_pid = fork_me(output_ptr);*/
 
-  char command[100];
+  char *command = NULL;
   while (1)
-    {
-      recv_command(read, command);
-      /*puts(command);*/
-  close_ui();
-  exit(0);
-    }
+  {
+    recv_command(read, &command);
+    log_write("play_while");
+    log_write(command);
+
+    free(command);
+  }
+
 }
 
 
