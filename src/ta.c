@@ -9,7 +9,7 @@
 #include "input.h"
 #include "output.h"
 #include "communicate.h"
-
+#include "log.h"
 
 pid_t fork_me( void (*go)(int *, int *), int *read, int *write )
 {
@@ -56,5 +56,3 @@ int main (int argc, char* argv[])
   }
 
 }
-
-
