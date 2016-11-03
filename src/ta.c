@@ -16,11 +16,14 @@ pid_t fork_me( void (*go)(int *, int *), int *read, int *write )
   pid_t pid = fork();
 
   if (pid == 0)
-    /* This process is the parent process. */
-    (*go)(read, write);
-  else
     /* This process is the child process. */
+    go(read, write);
+  else
+    /* This process is the parent process. */
     return pid;
+
+  /* TODO: Add error checking if process cannot be forked */
+  /* pid returned to parent would be -1 so check errno */
 }
 
 int main (int argc, char* argv[])
