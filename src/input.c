@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <curses.h>
 #include <unistd.h>
-#include <termios.h>
+#include <dlfcn.h>
 
 #include "communicate.h"
 #include "log.h"
@@ -48,15 +47,30 @@ void input (int *read, int *write) {
     read = NULL;
     char key;
 
-    struct termios tios;
-    struct termios other;
+    void *dynahand = NULL;
+    void (*input_init)();
+    char (*input_keypress)();
+    void (*input_clean)();
 
-    /* */
-    tcgetattr(STDIN_FILENO, &other);
-    tios = other;
-    /*tios.c_lflag &= ~(ICANON | ECHO);*/
-    cfmakeraw(&tios);
-    tcsetattr(STDIN_FILENO, TCSANOW, &tios);
+    char *error;
+
+    /* TODO make the selection of input library to load conditional. */
+    dlerror();
+    dynahand = dlopen("./libtermios_input.so", RTLD_LAZY);
+    if (dynahand == NULL)
+      log_write(dlerror());
+
+    /* the following code segments maybe could be done with a function */
+    *(void **)(&input_init) = dlsym(dynahand, "input_init");
+    if (input_init == NULL)
+      log_write(dlerror());
+    else
+      input_init();
+
+    *(void **)(&input_keypress) = dlsym(dynahand, "input_keypress");
+    if (input_keypress == NULL)
+      log_write(dlerror());
+
 
     while (1) {
 
@@ -65,7 +79,7 @@ void input (int *read, int *write) {
 
       /*key = getch();*/
 
-      key = getchar();
+      key = input_keypress();
 
       char command[3];
       command[0] = key;
@@ -81,7 +95,12 @@ void input (int *read, int *write) {
       log_write("hello!");
     }
 
+    *(void **)(&input_clean) = dlsym(dynahand, "input_clean");
+    if (input_clean == NULL)
+      log_write(dlerror());
+    else
+      input_clean();
 
-    /* Restore terminal too original state. */
-    tcsetattr(STDIN_FILENO, TCSANOW, &other);
+    if(dlclose(dynahand) != 0)
+      log_write(dlerror());
 }

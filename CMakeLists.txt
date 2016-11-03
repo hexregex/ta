@@ -4,6 +4,13 @@ project (play C)
 
 file (GLOB source_files src/*.c)
 
+message("${source_files}")
+list (REMOVE_ITEM source_files ${CMAKE_CURRENT_SOURCE_DIR}/src/termios_input.c)
+message("${source_files}")
+
+
+add_library (termios_input MODULE src/termios_input.c)
+
 add_executable (play ${source_files})
 
 #file (COPY "file.sdk" DESTINATION "build")
@@ -16,4 +23,4 @@ set (EXECUTABLE_OUTPUT_PATH "build")
 
 include_directories (${CURSES_INCLUDE_DIRS})
 
-target_link_libraries(play ncursesw)
+target_link_libraries(play ncursesw ${CMAKE_DL_LIBS})
