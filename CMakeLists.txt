@@ -15,12 +15,12 @@ add_executable (play ${source_files})
 
 #file (COPY "file.sdk" DESTINATION "build")
 
-message(STATUS ${CURSES_INCLUDE_DIRS})
-message(STATUS ${CURSES_LIBRARIES})
+#message(STATUS ${CURSES_INCLUDE_DIRS})
+#message(STATUS ${CURSES_LIBRARIES})
 
 file (MAKE_DIRECTORY "build")
 set (EXECUTABLE_OUTPUT_PATH "build")
 
-include_directories (${CURSES_INCLUDE_DIRS})
+#include_directories (${CURSES_INCLUDE_DIRS})
 
-target_link_libraries(play ncursesw ${CMAKE_DL_LIBS})
+target_link_libraries(play ncursesw avutil avformat avcodec ${CMAKE_DL_LIBS})

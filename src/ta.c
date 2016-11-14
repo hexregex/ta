@@ -11,6 +11,12 @@
 #include "communicate.h"
 #include "log.h"
 
+
+#define USE_FFMPEG
+#ifdef USE_FFMPEG
+#include "ffmpeg.h"
+#endif
+
 pid_t fork_me( void (*go)(int *, int *), int *read, int *write )
 {
   pid_t pid = fork();
@@ -18,6 +24,7 @@ pid_t fork_me( void (*go)(int *, int *), int *read, int *write )
   if (pid == 0)
     /* This process is the child process. */
     go(read, write);
+    /* TODO: What should the child process return? */
   else
     /* This process is the parent process. */
     return pid;
@@ -32,7 +39,7 @@ int main (int argc, char* argv[])
   /* Fork media player library process. */
   /* pid_t player_pid = fork_me(&player);*/
 
-  init_ui();
+  /* init_ui(); */
 
   int read;
   int write;
@@ -40,10 +47,13 @@ int main (int argc, char* argv[])
 
 
   /* Fork input module process. */
-  pid_t input_pid = fork_me(&input, NULL, &write);
+  /*pid_t input_pid = fork_me(&input, NULL, &write); */
 
   /* Fork output module process. */
   /*pid_t output_pid = fork_me(output_ptr);*/
+
+  // TODO: Fork or not to fork?
+  play_me("/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./10.Happy_Returns.flac");
 
   char *command = NULL;
   while (1)
