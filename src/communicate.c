@@ -13,7 +13,7 @@ static FILE *log;
    file descriptor used to read from the pipe.  'write' points to an int which
    is given the value of the file descriptor used to write to the pipe.
    to the pipe with. */
-void connect(int *read, int *write)
+void make_connection(int *read, int *write)
 {
   /* file descriptors */;
   int fildes[2];

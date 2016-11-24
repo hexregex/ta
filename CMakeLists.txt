@@ -4,6 +4,9 @@ project (play C)
 
 file (GLOB source_files src/*.c)
 
+set (CMAKE_BUILD_TYPE Debug)
+set (CMAKE_C_STANDARD 90)
+
 message("${source_files}")
 list (REMOVE_ITEM source_files ${CMAKE_CURRENT_SOURCE_DIR}/src/termios_input.c)
 message("${source_files}")
@@ -23,4 +26,4 @@ set (EXECUTABLE_OUTPUT_PATH "build")
 
 #include_directories (${CURSES_INCLUDE_DIRS})
 
-target_link_libraries(play ncursesw avutil avformat avcodec ${CMAKE_DL_LIBS})
+target_link_libraries(play ncursesw avutil avformat avcodec SDL ao pulse-simple ${CMAKE_DL_LIBS})

@@ -28,7 +28,8 @@ void load_keymap () {
   char * line[1024];
   FILE *key_map_stream = fopen("key_file", "r");
   int next_char;
-  for (int i = 0; i < 1024; i++)
+  int i;
+  for (i = 0; i < 1024; i++)
 
     next_char = fgetc(key_map_stream);
 

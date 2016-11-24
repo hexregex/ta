@@ -54,6 +54,7 @@ int main (int argc, char* argv[])
 
   // TODO: Fork or not to fork?
   play_me("/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./10.Happy_Returns.flac");
+  exit(0);
 
   char *command = NULL;
   while (1)
