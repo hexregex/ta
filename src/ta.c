@@ -33,7 +33,7 @@ pid_t fork_me( void (*go)(int *, int *), int *read, int *write )
   /* pid returned to parent would be -1 so check errno */
 }
 
-int main (int argc, char* argv[])
+int maid (int argc, char* argv[])
 {
 
   /* Fork media player library process. */

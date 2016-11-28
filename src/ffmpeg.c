@@ -12,7 +12,8 @@
 #define AVCODEC_MAX_AUDIO_FRAME_SIZE 192000
 
 
-static inline void error_woe(int error)
+static inline
+void error_woe(int error)
 {
   if (error != 0)
   {
@@ -27,7 +28,7 @@ static inline void error_woe(int error)
 }
 
 static inline
-int locate_audio_stream(AVFormatContext *format_context)
+int ta_get_audio_stream(AVFormatContext *format_context)
 {
   /* Locate the audio stream */
   int stream = -1, i;
@@ -48,10 +49,16 @@ int locate_audio_stream(AVFormatContext *format_context)
   return stream;
 }
 
+static inline
+AVCodecContext *ta_get_codec_context(AVFormatContext *format_context, int stream)
+{
+    return format_context->streams[stream]->codec;
+}
+
 void play_me(const char *const filename)
 {
   AVFormatContext *format_context = NULL;
-  AVCodecContext *codec_contextSave = NULL;
+  AVCodecContext *codec_context_original = NULL;
   AVCodecContext *codec_context = NULL;
   AVCodec *codec = NULL;
   AVDictionary *dictionary;
@@ -72,16 +79,12 @@ void play_me(const char *const filename)
   av_dump_format(format_context, 0, filename, 0);
 
   int stream = ta_get_audio_stream(format_context);
-                                 _
   /* fprintf(stderr, "%i", stream); */
 
-
-
   /* codec_context = format_context->streams[stream]->codec; */
-  codec_context = ta_get_codec_context(AVFormatContext);
+  codec_context_original = ta_get_codec_context(format_context, stream);
 
-  codec = avcodec_find_decoder(codec_context->codec_id);
-
+  codec = avcodec_find_decoder(codec_context_original->codec_id);
   if (codec == NULL)
   {
     /* TODO: Add better error handling. */
@@ -89,11 +92,18 @@ void play_me(const char *const filename)
     exit(4);
   }
 
+  fprintf(stderr, "Codec: %s\n", codec);
 
-  codec_context = avcodec_alloc_context3(codec);
+  /* Do I need to pass 'codec' here? */
+  /* codec_context = avcodec_alloc_context3(codec); */
+  codec_context = avcodec_alloc_context3(NULL);
+
+  error_woe( avcodec_copy_context(codec_context, codec_context_original) );
 
   /* Open the codec */
   error_woe( avcodec_open2(codec_context, codec, NULL) );
+
+  exit(1);
 
     av_init_packet(packet);
 
@@ -108,8 +118,10 @@ void play_me(const char *const filename)
 
     int len;
     int frameFinished =0;
+    /*
     while( avcodec_receive_frame(codec_context, av_frame) >= 0)
     {
+    */
         fprintf(stderr, "made 3\n");
 
         // Decodes from `packet` into the buffer
@@ -120,10 +132,14 @@ void play_me(const char *const filename)
         */
 
         int error;
+        /*
         error_woe( error = avcodec_send_packet(codec_context, packet) );
+        */
         fprintf(stderr, "made 4\n");
 
+        /*
         error_woe( avcodec_receive_frame(codec_context, av_frame) );
+        */
         fprintf(stderr, "made 5\n");
 
         // Send the buffer contents to the audio device
@@ -131,8 +147,10 @@ void play_me(const char *const filename)
 
 
 
+        /*
     }
-    av_packet_free(packet);
+    */
+    av_packet_free(&packet);
     av_frame_free(&av_frame);
 
     avformat_close_input(&format_context);
