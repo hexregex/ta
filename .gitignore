@@ -5,3 +5,6 @@ logfile
 Makefile
 build/
 CMakeFiles/
+FFmpeg/
+SDL/
+libao/

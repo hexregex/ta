@@ -26,4 +26,6 @@ set (EXECUTABLE_OUTPUT_PATH "build")
 
 #include_directories (${CURSES_INCLUDE_DIRS})
 
-target_link_libraries(play ncursesw avutil avformat avcodec SDL ao pulse-simple swscale ${CMAKE_DL_LIBS})
+# History
+#target_link_libraries(play ncursesw avutil avformat avcodec SDL ao pulse-simple swscale ${CMAKE_DL_LIBS})
+target_link_libraries(play avutil avformat avcodec ao swscale ncursesw ${CMAKE_DL_LIBS})
