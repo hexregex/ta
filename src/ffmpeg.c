@@ -1,8 +1,14 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
 
+#include <libavutil/samplefmt.h>
+#include <libavutil/mathematics.h>
 #include <libavutil/error.h>
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
+#include <libswscale/swscale.h>
 #include <ao/ao.h>
 #include <pulse/simple.h>
 
@@ -11,9 +17,16 @@
 #define ERR_BUFF_SIZE 80
 #define AVCODEC_MAX_AUDIO_FRAME_SIZE 192000
 
+static
+void error_woe(const char *message)
+{
+    fprintf(stderr, "FFmpeg Error: %s\n", message);
+    exit(1);
+}
+
 
 static inline
-void error_woe(int error)
+void ff_error_woe(int error)
 {
   if (error != 0)
   {
@@ -22,8 +35,7 @@ void error_woe(int error)
     /* Get back error string from FFmpeg */
     av_strerror(error, err_str, ERR_BUFF_SIZE);
 
-    fprintf(stderr, "FFmpeg Error: %s\n", err_str);
-    exit(1);
+    error_woe(err_str);
   }
 }
 
@@ -31,153 +43,125 @@ static inline
 int ta_get_audio_stream(AVFormatContext *format_context)
 {
   /* Locate the audio stream */
-  int stream = -1, i;
+  int i, stream = -1;
   for (i = 0; i < format_context->nb_streams; i++)
   {
     /* TODO: Compiler warns "codec" is deprecated. Fix. */
-    if (format_context->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO)
+    if ( format_context->streams[i]->codec->codec_type
+         == AVMEDIA_TYPE_AUDIO )
     {
       stream = i;
       break;
     }
-    // comments
   }
-
-  /* TODO: Add better error handling. */
-  if (stream == -1) exit(5);
+  if (stream == -1) error_woe("Could not find Audio Stream");
 
   return stream;
 }
 
-static inline
-AVCodecContext *ta_get_codec_context(AVFormatContext *format_context, int stream)
+void play_me(const char *const input_filename)
 {
-    return format_context->streams[stream]->codec;
-}
+    /* Register all the codecs. */
+    av_register_all();
 
-void play_me(const char *const filename)
-{
-  AVFormatContext *format_context = NULL;
-  AVCodecContext *codec_context_original = NULL;
-  AVCodecContext *codec_context = NULL;
-  AVCodec *codec = NULL;
-  AVDictionary *dictionary;
-  AVPacket *packet;
-  AVFrame *av_frame;
+    AVFormatContext *container = avformat_alloc_context();
+    /* Open the media file. */
+    ff_error_woe( avformat_open_input(&container, input_filename, NULL, NULL) );
 
+    /* Get information about the media stream. */
+    ff_error_woe( avformat_find_stream_info(container, NULL) );
 
-  /* Register all the codecs. */
-  av_register_all();
+    /* Output stream info to stderr */
+    av_dump_format(container,0,input_filename,0);
 
-  /* Open the media file. */
-  error_woe( avformat_open_input(&format_context, filename, NULL, NULL) );
+    int stream_id = ta_get_audio_stream(container);
 
-  /* Get information about the media stream. */
-  error_woe( avformat_find_stream_info(format_context, NULL) );
+    /* TODO: Is this used by anything? */
+    /* AVDictionary *metadata = container->metadata; */
 
-  /* Output stream info to stderr */
-  av_dump_format(format_context, 0, filename, 0);
+    AVCodecContext *ctx = container->streams[stream_id]->codec;
+    AVCodec *codec = avcodec_find_decoder( ctx->codec_id );
+    if (codec == NULL) error_woe("FFmpeg Error: Codec is not supported.");
 
-  int stream = ta_get_audio_stream(format_context);
-  /* fprintf(stderr, "%i", stream); */
+    /* Open the codec */
+    if ( avcodec_open2(ctx, codec, NULL) < 0 )
+        error_woe("Codec cannot be found.");
 
-  /* codec_context = format_context->streams[stream]->codec; */
-  codec_context_original = ta_get_codec_context(format_context, stream);
+    /* TODO: Is this required? */
+    /* ctx=avcodec_alloc_context3(codec); */
 
-  codec = avcodec_find_decoder(codec_context_original->codec_id);
-  if (codec == NULL)
-  {
-    /* TODO: Add better error handling. */
-    fprintf(stderr, "FFmpeg Error: Codec is not supported.\n");
-    exit(4);
-  }
+    /* Initialize the AO library */
+    ao_initialize();
 
-  fprintf(stderr, "Codec: %s\n", codec);
+    ao_sample_format sformat;
+    enum AVSampleFormat sfmt = ctx->sample_fmt;
+    switch (sfmt)
+    {
+        case AV_SAMPLE_FMT_U8:
+            printf("U8\n");
+            sformat.bits = 8;
+            break;
+        case AV_SAMPLE_FMT_S16:
+            printf("S16\n");
+            sformat.bits = 16;
+            break;
+        case AV_SAMPLE_FMT_S32:
+            printf("S32\n");
+            sformat.bits = 32;
+            break;
+    }
 
-  /* Do I need to pass 'codec' here? */
-  /* codec_context = avcodec_alloc_context3(codec); */
-  codec_context = avcodec_alloc_context3(NULL);
+    sformat.channels = ctx->channels;
+    sformat.rate = ctx->sample_rate;
+    sformat.byte_format = AO_FMT_NATIVE;
+    /*sformat.matrix = "L,R";*/
+    sformat.matrix = 0;
 
-  error_woe( avcodec_copy_context(codec_context, codec_context_original) );
+    int driver = ao_default_driver_id();
+    ao_device *adevice = ao_open_live(driver, &sformat, NULL);
+    int error = errno;
+    //end of init AO LIB
+    if (adevice == NULL)
+    {
+      fprintf(stderr, "error number:%i\n", error);
+    }
 
-  /* Open the codec */
-  error_woe( avcodec_open2(codec_context, codec, NULL) );
-
-  exit(1);
-
+    AVPacket p, *packet = &p; /* never use variable p again */
+    /* TODO is this better? */
+    /* AVPacket packet = malloc( sizeof( AVPacket ) ); */
     av_init_packet(packet);
 
     /* Allocate the frame */
-    av_frame = av_frame_alloc();
+    AVFrame *frame = av_frame_alloc();
 
-    int buffer_size = AVCODEC_MAX_AUDIO_FRAME_SIZE;
+    int buffer_size = AVCODEC_MAX_AUDIO_FRAME_SIZE
+                      + FF_INPUT_BUFFER_PADDING_SIZE;
     uint8_t buffer[buffer_size];
     packet->data = buffer;
     packet->size = buffer_size;
 
-
     int len;
-    int frameFinished =0;
-    /*
-    while( avcodec_receive_frame(codec_context, av_frame) >= 0)
+    int frameFinished = 0;
+    while ( av_read_frame(container, packet) >= 0 )
     {
-    */
-        fprintf(stderr, "made 3\n");
-
-        // Decodes from `packet` into the buffer
-        /*
-        if (avcodec_decode_audio4(codec_context, (int16_t*)buffer, &buffer_size, &packet) < 1) {
-            break;  // Error in decoding
-        }
-        */
-
-        int error;
-        /*
-        error_woe( error = avcodec_send_packet(codec_context, packet) );
-        */
-        fprintf(stderr, "made 4\n");
-
-        /*
-        error_woe( avcodec_receive_frame(codec_context, av_frame) );
-        */
-        fprintf(stderr, "made 5\n");
-
-        // Send the buffer contents to the audio device
-        /*ao_play(device, av_frame-(char*)buffer, buffer_size); */
-
-
-
-        /*
+        if (packet->stream_index == stream_id)
+        {
+            int len = avcodec_decode_audio4(ctx, frame, &frameFinished, packet);
+            //frame->
+            if (frameFinished)
+            {
+                ao_play(adevice, (char*)frame->extended_data[0],frame->linesize[0] );
+            } else {
+                //printf("Not Finished\n");
+            }
+        } else printf("Some other packet possibly video\n");
     }
-    */
-    av_packet_free(&packet);
-    av_frame_free(&av_frame);
 
-    avformat_close_input(&format_context);
+    av_packet_unref(packet);
+    av_frame_free(&frame);
 
+    ao_shutdown();
+    avformat_close_input(&container);
 
-  fprintf(stderr, "\nYou made it!\n");
+    fprintf(stderr, "\nYou made it!\n");
 }
-
-
-/* code to initialize pulse audio */
-/*
-pa_simple *s;
-pa_sample_spec ss;
-ss.format = PA_SAMPLE_S16NE;
-ss.channels = 2;
-ss.rate = 44100;
-
-s = pa_simple_new(NULL,               // Use the default server.
-                "Fooapp",           // Our application's name.
-                PA_STREAM_PLAYBACK,
-                NULL,               // Use the default device.
-                "Music",            // Description of our stream.
-                &ss,                // Our sample format.
-                NULL,               // Use default channel map
-                NULL,               // Use default buffering attributes.
-                NULL               // Ignore error code.
-                );
-
-pa_simple_write (s, av_frame->data[0], AVCODEC_MAX_AUDIO_FRAME_SIZE, &error);
-*/
