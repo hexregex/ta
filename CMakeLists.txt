@@ -5,7 +5,11 @@ project (play C)
 file (GLOB source_files src/*.c)
 
 set (CMAKE_BUILD_TYPE Debug)
-set (CMAKE_C_STANDARD 11)
+#set (CMAKE_C_STANDARD 99)
+#set (CMAKE_C_FLAGS "-Wall -Wextra -std=c99")
+set (CMAKE_C_FLAGS "-Wall -std=c99")
+#set (CMAKE_C_FLAGS "-std=c99")
+#set (CMAKE_VERBOSE_MAKEFILE TRUE)
 
 message("${source_files}")
 list (REMOVE_ITEM source_files ${CMAKE_CURRENT_SOURCE_DIR}/src/termios_input.c)

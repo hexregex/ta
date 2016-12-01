@@ -16,10 +16,11 @@
 
 #define ERR_BUFF_SIZE 80
 #define AVCODEC_MAX_AUDIO_FRAME_SIZE 192000
+#define BUFFER_SIZE AVCODEC_MAX_AUDIO_FRAME_SIZE + FF_INPUT_BUFFER_PADDING_SIZE
 
-static
-void error_woe(const char *message)
+static void error_woe(const char *message)
 {
+  // hello
     fprintf(stderr, "FFmpeg Error: %s\n", message);
     exit(1);
 }
@@ -120,7 +121,6 @@ void play_me(const char *const input_filename)
     int driver = ao_default_driver_id();
     ao_device *adevice = ao_open_live(driver, &sformat, NULL);
     int error = errno;
-    //end of init AO LIB
     if (adevice == NULL)
     {
       fprintf(stderr, "error number:%i\n", error);
@@ -134,11 +134,9 @@ void play_me(const char *const input_filename)
     /* Allocate the frame */
     AVFrame *frame = av_frame_alloc();
 
-    int buffer_size = AVCODEC_MAX_AUDIO_FRAME_SIZE
-                      + FF_INPUT_BUFFER_PADDING_SIZE;
-    uint8_t buffer[buffer_size];
+    uint8_t buffer[BUFFER_SIZE];
     packet->data = buffer;
-    packet->size = buffer_size;
+    packet->size = BUFFER_SIZE;
 
     int len;
     int frameFinished = 0;
@@ -147,7 +145,7 @@ void play_me(const char *const input_filename)
         if (packet->stream_index == stream_id)
         {
             int len = avcodec_decode_audio4(ctx, frame, &frameFinished, packet);
-            //frame->
+
             if (frameFinished)
             {
                 ao_play(adevice, (char*)frame->extended_data[0],frame->linesize[0] );
