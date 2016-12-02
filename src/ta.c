@@ -46,12 +46,12 @@ int main (int argc, char* argv[])
 
 
   /* Fork input module process. */
-  /*pid_t input_pid = fork_me(&input, NULL, &write); */
+  pid_t input_pid = fork_me(&input, NULL, &write);
 
   /* Fork output module process. */
   /*pid_t output_pid = fork_me(output_ptr);*/
 
-  // TODO: Fork or not to fork?
+  /* TODO: Fork or not to fork? */
   play_me("/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./10.Happy_Returns.flac");
   exit(0);
 

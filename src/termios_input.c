@@ -8,7 +8,7 @@
 static struct termios tios;
 static struct termios other;
 
-void input_init ()
+void input_init()
 {
 
     /* */
@@ -19,12 +19,12 @@ void input_init ()
     tcsetattr(STDIN_FILENO, TCSANOW, &tios);
 }
 
-char input_keypress ()
+char input_keypress()
 {
     return getchar();
 }
 
-void input_clean ()
+void input_clean()
 {
     /* Restore terminal too original state. */
     tcsetattr(STDIN_FILENO, TCSANOW, &other);
