@@ -18,7 +18,6 @@
 
 static void error_woe(const char *message)
 {
-  // hello
     fprintf(stderr, "FFmpeg Error: %s\n", message);
     exit(1);
 }
@@ -41,21 +40,21 @@ void ff_error_woe(int error)
 static inline
 int ta_get_audio_stream(AVFormatContext *format_context)
 {
-  /* Locate the audio stream */
-  int i, stream = -1;
-  for (i = 0; i < format_context->nb_streams; i++)
-  {
-    /* TODO: Compiler warns "codec" is deprecated. Fix. */
-    if ( format_context->streams[i]->codec->codec_type
-         == AVMEDIA_TYPE_AUDIO )
+    /* Locate the audio stream */
+    int i, stream = -1;
+    for (i = 0; i < format_context->nb_streams; i++)
     {
-      stream = i;
-      break;
+        /* TODO: Compiler warns "codec" is deprecated. Fix. */
+        if ( format_context->streams[i]->codec->codec_type
+             == AVMEDIA_TYPE_AUDIO )
+        {
+            stream = i;
+            break;
+        }
     }
-  }
-  if (stream == -1) error_woe("Could not find Audio Stream");
+    if (stream == -1) error_woe("Could not find Audio Stream");
 
-  return stream;
+    return stream;
 }
 
 void play_me(const char *const input_filename)
@@ -121,7 +120,7 @@ void play_me(const char *const input_filename)
     int error = errno;
     if (adevice == NULL)
     {
-      fprintf(stderr, "error number:%i\n", error);
+        fprintf(stderr, "error number:%i\n", error);
     }
 
     AVPacket p, *packet = &p; /* never use variable p again */
@@ -158,6 +157,4 @@ void play_me(const char *const input_filename)
 
     ao_shutdown();
     avformat_close_input(&container);
-
-    fprintf(stderr, "\nYou made it!\n");
 }
