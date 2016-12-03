@@ -10,7 +10,7 @@
    file descriptor used to read from the pipe.  'write' points to an int which
    is given the value of the file descriptor used to write to the pipe.
    to the pipe with. */
-void comm_connect(int *read, int *write)
+void comm_connect(int *fd_read, int *fd_write)
 {
   /* file descriptors */;
   int fildes[2];
@@ -19,17 +19,16 @@ void comm_connect(int *read, int *write)
   status = pipe(fildes);
   if (status == -1)
   {
-    /* TODO */
-    /* error creating pipe. handle error */
+    /* TODO: Error creating pipe. handle error */
     return;
   }
 
-  *read = fildes[0];
-  *write = fildes[1];
+  *fd_read = fildes[0];
+  *fd_write = fildes[1];
 
   log_write("**************************");
-  log_write_int(*read);
-  log_write_int(*write);
+  log_write_int(*fd_read);
+  log_write_int(*fd_write);
 }
 
 void comm_send(int pipe, const Comm *command) {
