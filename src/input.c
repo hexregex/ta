@@ -25,7 +25,7 @@ struct opmap {
 
 void load_keymap () {
 
-  char * line[1024];
+  /* char * line[1024]; */
   FILE *key_map_stream = fopen("key_file", "r");
   int next_char;
   int i;
@@ -46,14 +46,11 @@ void load_keymap () {
 
 void input (int *read, int *write) {
     read = NULL;
-    char key;
 
     void *dynahand = NULL;
     void (*input_init)();
     char (*input_keypress)();
     void (*input_clean)();
-
-    char *error;
 
     /* TODO make the selection of input library to load conditional. */
     dlerror();
@@ -80,18 +77,14 @@ void input (int *read, int *write) {
 
       /*key = getch();*/
 
-      key = input_keypress();
-
-      char command[3];
-      command[0] = key;
-      command[1] = '\n';
-      command[2] = '\0';
+      Comm xyz = {input_keypress()};
+      Comm *command = &xyz;
 
       log_write("input");
-      log_write_int(key);
-      log_write(command);
+      log_write_int(command->data);
+      log_write_comm(command);
 
-      send_command(*write, command);
+      comm_send(*write, command);
 
       log_write("hello!");
     }

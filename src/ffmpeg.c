@@ -138,13 +138,13 @@ void play_me(const char *const input_filename)
     packet->data = buffer;
     packet->size = BUFFER_SIZE;
 
-    int len;
     int frameFinished = 0;
     while ( av_read_frame(container, packet) >= 0 )
     {
         if (packet->stream_index == stream_id)
         {
-            int len = avcodec_decode_audio4(ctx, frame, &frameFinished, packet);
+            /* int len = avcodec_decode_audio4(ctx, frame, &frameFinished, packet); */
+            avcodec_decode_audio4(ctx, frame, &frameFinished, packet);
 
             if (frameFinished)
             {

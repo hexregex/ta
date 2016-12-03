@@ -22,9 +22,12 @@ pid_t fork_me( void (*go)(int *, int *), int *read, int *write )
   pid_t pid = fork();
 
   if (pid == 0)
-    /* This process is the child process. */
-    go(read, write);
-    /* TODO: What should the child process return? */
+  {
+      /* This process is the child process. */
+      go(read, write);
+      /* TODO: What should the child process return? */
+      return pid;
+  }
   else
     /* This process is the parent process. */
     return pid;
@@ -42,11 +45,12 @@ int main (int argc, char* argv[])
 
   int read;
   int write;
-  make_connection(&read, &write);
+  comm_connect(&read, &write);
 
 
   /* Fork input module process. */
-  pid_t input_pid = fork_me(&input, NULL, &write);
+  /* pid_t input_pid = fork_me(&input, NULL, &write); */
+  fork_me(&input, NULL, &write);
 
   /* Fork output module process. */
   /*pid_t output_pid = fork_me(output_ptr);*/
@@ -55,17 +59,16 @@ int main (int argc, char* argv[])
   play_me("/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./10.Happy_Returns.flac");
   exit(0);
 
-  char *command = NULL;
+  Comm command;
   while (1)
   {
-    recv_command(read, &command);
+    comm_recv(read, &command);
 
     /* TODO: Terminate the while loop when a specific key is pressed. */
 
     log_write("play_while");
-    log_write(command);
+    log_write_comm(&command);
 
-    free(command);
   }
 
 }
