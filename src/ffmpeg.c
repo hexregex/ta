@@ -12,8 +12,6 @@
 #include <ao/ao.h>
 #include <pulse/simple.h>
 
-#include "sdl.h"
-
 #define ERR_BUFF_SIZE 80
 #define AVCODEC_MAX_AUDIO_FRAME_SIZE 192000
 #define BUFFER_SIZE AVCODEC_MAX_AUDIO_FRAME_SIZE + FF_INPUT_BUFFER_PADDING_SIZE

@@ -44,9 +44,7 @@ void load_keymap () {
   fclose(key_map_stream);
 }
 
-void input (int *read, int *write) {
-    read = NULL;
-
+void input (int unused, int fd_write) {
     void *dynahand = NULL;
     void (*input_init)();
     char (*input_keypress)();
@@ -71,6 +69,8 @@ void input (int *read, int *write) {
 
 
     while (1) {
+    printf("input is here\n");
+    log_write("input_while-start");
 
       /* TODO: Figure out how to gracefully terminate this process
          when SIGTERM in recieved. */
@@ -80,13 +80,11 @@ void input (int *read, int *write) {
       Comm xyz = {input_keypress()};
       Comm *command = &xyz;
 
-      log_write("input");
-      log_write_int(command->data);
       log_write_comm(command);
 
-      comm_send(*write, command);
+      comm_send(fd_write, command);
 
-      log_write("hello!");
+      log_write("input_while-end");
     }
 
     *(void **)(&input_clean) = dlsym(dynahand, "input_clean");

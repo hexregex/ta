@@ -1,18 +1,29 @@
 #ifndef AT_COMMUNICATE_TA
 #define AT_COMMUNICATE_TA
 
-/*
-play
-pause
-seek
-next
-previous
-*/
+
+typedef enum
+{
+    PLAY,
+    PAUSE,
+    SEEK,
+    RESTART,
+    RESET,
+    NEXT,
+    PREVIOUS,
+    TRACK
+} Code;
+
 
 /* Use union/struct instead of built in type so I can changelater */
-typedef union {
-    char code;
-    int data;
+typedef struct
+{
+    Code code;
+    union
+    {
+        int i;
+        unsigned char c;
+    } data;
 } Comm;
 
 

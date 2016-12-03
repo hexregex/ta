@@ -9,6 +9,7 @@ int log_write(const char *log_message)
   FILE *log;
   log = fopen("logfile", "a");
   count = fprintf(log, "%s\n", log_message);
+  //count = fprintf(stderr, "%s\n", log_message);
   fclose(log);
   return count;
 }

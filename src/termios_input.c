@@ -11,10 +11,9 @@ static struct termios other;
 void input_init()
 {
 
-    /* */
     tcgetattr(STDIN_FILENO, &other);
     tios = other;
-    /*tios.c_lflag &= ~(ICANON | ECHO);*/
+    /* tios.c_lflag &= ~(ICANON | ECHO); */
     cfmakeraw(&tios);
     tcsetattr(STDIN_FILENO, TCSANOW, &tios);
 }

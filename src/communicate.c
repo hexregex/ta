@@ -33,11 +33,7 @@ void comm_connect(int *read, int *write)
 }
 
 void comm_send(int pipe, const Comm *command) {
-    /*
-    log_write("send_command start");
-    log_write(command);
-    log_write("send_command end");
-    */
+    log_write("comm_send-start");
 
     if (command == NULL)
     {
@@ -45,24 +41,17 @@ void comm_send(int pipe, const Comm *command) {
     }
 
     write(pipe, command, sizeof(Comm));
-    log_write("after_fprintf");
+    log_write("comm_send-end");
 }
 
 
-/* pass a pointer to a string because when I was just passing a string
-   realloc would change the address stored in the character pointer
-   so command from the calling routing (who's address pointed to remained
-   unchanged) would end up pointing to unallocated memory and seg fault. */
 void comm_recv(int pipe, Comm *command)
 {
-    log_write("recv_command");
-
-    log_write("recv_command_while");
+    log_write("comm_recv-start");
 
     read(pipe, command, sizeof(Comm));
 
-
-    log_write("recv_command_after_while");
+    log_write("comm_recv-end");
 }
 
 void comm_to_string(const Comm *command, char *string)
