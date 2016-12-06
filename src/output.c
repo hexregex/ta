@@ -5,7 +5,7 @@
 #include "output.h"
 #include "communicate.h"
 
-void output(int fd_read, int unused)
+void out_process_go(int fd_read_from_main)
 {
     // int file_flags = fcntl(fd_read, F_GETFL);
     // printf("output flag non-block = %i\n", file_flags);
@@ -14,7 +14,7 @@ void output(int fd_read, int unused)
         printf("output is here\n");
         log_write("output_while-start");
         Comm command;
-        comm_recv(fd_read, &command);
+        comm_recv(fd_read_from_main, &command);
 
         char output[100];
         comm_to_string(&command, output);

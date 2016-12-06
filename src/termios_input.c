@@ -3,12 +3,10 @@
 #include <unistd.h>
 #include <termios.h>
 
-#include "log.h"
-
 static struct termios tios;
 static struct termios other;
 
-void input_init()
+void tios_init()
 {
 
     tcgetattr(STDIN_FILENO, &other);
@@ -18,12 +16,12 @@ void input_init()
     tcsetattr(STDIN_FILENO, TCSANOW, &tios);
 }
 
-char input_keypress()
+char tios_keypress()
 {
     return getchar();
 }
 
-void input_clean()
+void tios_clean()
 {
     /* Restore terminal too original state. */
     tcsetattr(STDIN_FILENO, TCSANOW, &other);

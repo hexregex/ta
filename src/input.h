@@ -12,6 +12,6 @@ typedef enum {
 
 
 void load_keymap ();
-void input (int unused, int fd_write);
+void in_process_go (int fd_write_to_main);
 
 #endif /* AT_INPUT_TA */

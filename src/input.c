@@ -6,25 +6,12 @@
 #include "communicate.h"
 #include "log.h"
 
-/*
-   play
-   paus
-   seek
-   next
-   prev
-   quit
- */
-
-
 struct opmap {
     int keypress;
     char code[5];
 };
 
-
-
 void load_keymap () {
-
     /* char * line[1024]; */
     FILE *key_map_stream = fopen("key_file", "r");
     int next_char;
@@ -37,14 +24,12 @@ void load_keymap () {
     }
     while (next_char != '\0');
 
-
-
     /*opmap ops[6];*/
 
     fclose(key_map_stream);
 }
 
-void input (int unused, int fd_write) {
+void in_process_go(int fd_write_to_main) {
     void *dynahand = NULL;
     void (*input_init)();
     char (*input_keypress)();
@@ -57,13 +42,13 @@ void input (int unused, int fd_write) {
         log_write(dlerror());
 
     /* the following code segments maybe could be done with a function */
-    *(void **)(&input_init) = dlsym(dynahand, "input_init");
+    *(void **)(&input_init) = dlsym(dynahand, "tios_init");
     if (input_init == NULL)
         log_write(dlerror());
     else
         input_init();
 
-    *(void **)(&input_keypress) = dlsym(dynahand, "input_keypress");
+    *(void **)(&input_keypress) = dlsym(dynahand, "tios_keypress");
     if (input_keypress == NULL)
         log_write(dlerror());
 
@@ -82,12 +67,12 @@ void input (int unused, int fd_write) {
 
         log_write_comm(command);
 
-        comm_send(fd_write, command);
+        comm_send(fd_write_to_main, command);
 
         log_write("input_while-end");
     }
 
-    *(void **)(&input_clean) = dlsym(dynahand, "input_clean");
+    *(void **)(&input_clean) = dlsym(dynahand, "tios_clean");
     if (input_clean == NULL)
         log_write(dlerror());
     else
