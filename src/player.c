@@ -19,12 +19,12 @@ static inline void plr_load_lib() {
 
 void *plr_thread_go(void *thread_arg)
 {
-    char *in_filename = (char *)thread_arg;
+    char **in_filename = (char **)thread_arg;
 
     plr_load_lib();
 
     plr_init();
-    plr_open(in_filename);
+    plr_open(in_filename[1]);
     plr_play();
 
     /* TODO: What is a useful value to return on thread termination? */

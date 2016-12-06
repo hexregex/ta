@@ -67,13 +67,12 @@ int main (int argc, char* argv[])
     pthread_attr_init(&create);
     */
 
-    char file_name[128] = "/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./10.Happy_Returns.flac";
-
+    char *file_names[] = {"/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./10.Happy_Returns.flac", "/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./11.Ascendant_Here_On....flac"};
     pthread_t plr_thread_id;
     pthread_create(&plr_thread_id,
                    NULL,
                    &plr_thread_go,
-                   (void *)file_name);
+                   (void *)&file_names);
     Comm command;
     while (1)
     {
