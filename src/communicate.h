@@ -1,25 +1,11 @@
 #ifndef AT_COMMUNICATE_TA
 #define AT_COMMUNICATE_TA
 
-
-typedef enum
-{
-    PLAY,
-    PAUSE,
-    SEEK,
-    RESTART,
-    RESET,
-    NEXT,
-    PREVIOUS,
-    TRACK
-} Code;
-
-
 /* Use union/struct instead of built in type so I can change later. */
 /* TODO: Is this the best way? */
 typedef struct
 {
-    Code code;
+    int code; /* For passing __Code enums */
     union
     {
         int i;

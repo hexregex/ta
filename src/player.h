@@ -1,6 +1,18 @@
 #ifndef AT_PLAYER_TA
 #define AT_PLAYER_TA
 
+typedef enum
+{
+    PLAY,
+    PAUSE,
+    NEXT,
+    PREVIOUS,
+    REPEAT,
+    SEEK,
+    RESET,
+    TRACK
+} PlrCode;
+
 /* 'plr' == player */
 void (*plr_init)();
 void (*plr_open)(const char *);

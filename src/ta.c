@@ -3,7 +3,6 @@
 #include <curses.h>
 #include <unistd.h>
 #include <pthread.h>
-/* #include <sys/types.h> */
 
 #include "ui.h"
 #include "player.h"
