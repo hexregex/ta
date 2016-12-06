@@ -4,7 +4,6 @@
 #include "ffmpeg.h"
 
 
-
 static inline void plr_load_lib() {
     /* TODO: Load the functions pointed to dynamically. */
     /* Currently defined in ffmpeg.c */
@@ -12,6 +11,10 @@ static inline void plr_load_lib() {
     plr_open = &ff_open;
     plr_play = &ff_play;
     plr_pause = &ff_pause;
+    plr_next = &ff_next;
+    plr_previous = &ff_previous;
+    plr_repeat = &ff_repeat;
+    plr_seek = &ff_seek;
 }
 
 void *plr_thread_go(void *thread_arg)

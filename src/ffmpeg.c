@@ -152,8 +152,7 @@ void ff_open(const char *in_filename) {
 
 void ff_play()
 {
-
-    AVPacket p, *packet = &p; /* never use variable p again */
+    AVPacket p, *packet = &p; /* Never use variable p again */
     /* TODO is this better? */
     /* AVPacket packet = malloc( sizeof( AVPacket ) ); */
     av_init_packet(packet);
@@ -193,4 +192,22 @@ void ff_play()
 void ff_pause()
 {
 }
+
+
+void ff_next()
+{
+}
+
+void ff_previous()
+{
+}
+
+void ff_repeat()
+{
+}
+
+void ff_seek()
+{
+}
+
 

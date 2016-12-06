@@ -7,5 +7,9 @@ void ff_dest();
 void ff_open(const char* in_filename);
 void ff_play();
 void ff_pause();
+void ff_next();
+void ff_previous();
+void ff_repeat();
+void ff_seek();
 
 #endif /* AT_FFMPEG_TA */

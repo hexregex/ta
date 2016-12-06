@@ -6,6 +6,10 @@ void (*plr_init)();
 void (*plr_open)(const char *);
 void (*plr_play)();
 void (*plr_pause)();
+void (*plr_next)();
+void (*plr_previous)();
+void (*plr_repeat)();
+void (*plr_seek)();
 
 void *plr_thread_go(void *thread_arg);
 

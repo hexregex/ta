@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 2.8.4)
 
-project (play C)
+project (ta C)
 
 file (GLOB source_files src/*.c)
 
@@ -8,7 +8,7 @@ set (CMAKE_BUILD_TYPE Debug)
 #set (CMAKE_C_STANDARD 99)
 #set (CMAKE_C_FLAGS "-Wall -Wextra -std=c99")
 #set (CMAKE_C_FLAGS "-Wall -std=c99")
-set (CMAKE_C_FLAGS "-Wall -std=c99 -pthread")
+set (CMAKE_C_FLAGS "-Wall -Wextra -std=c99 -pthread")
 #set (CMAKE_C_FLAGS "-std=c99")
 #set (CMAKE_VERBOSE_MAKEFILE TRUE)
 
@@ -19,7 +19,7 @@ message("${source_files}")
 
 add_library (termios_input MODULE src/termios_input.c)
 
-add_executable (play ${source_files})
+add_executable (ta ${source_files})
 
 #file (COPY "file.sdk" DESTINATION "build")
 
@@ -32,5 +32,5 @@ set (EXECUTABLE_OUTPUT_PATH "build")
 #include_directories (${CURSES_INCLUDE_DIRS})
 
 # History
-#target_link_libraries(play ncursesw avutil avformat avcodec SDL ao pulse-simple swscale ${CMAKE_DL_LIBS})
-target_link_libraries(play avutil avformat avcodec ao swscale ncursesw ${CMAKE_DL_LIBS})
+#target_link_libraries(ta ncursesw avutil avformat avcodec SDL ao pulse-simple swscale ${CMAKE_DL_LIBS})
+target_link_libraries(ta avutil avformat avcodec ao swscale ncursesw ${CMAKE_DL_LIBS})
