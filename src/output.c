@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <fcntl.h>
 
 #include "log.h"
 #include "output.h"
@@ -6,6 +7,8 @@
 
 void output(int fd_read, int unused)
 {
+    // int file_flags = fcntl(fd_read, F_GETFL);
+    // printf("output flag non-block = %i\n", file_flags);
     while (1)
     {
         printf("output is here\n");

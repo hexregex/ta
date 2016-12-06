@@ -57,27 +57,56 @@ int ta_get_audio_stream(AVFormatContext *format_context)
     return stream;
 }
 
-void play_me(const char *const input_filename)
+
+static AVFormatContext *container = NULL;
+static int stream_id;
+static AVCodecContext *ctx = NULL;
+
+static ao_sample_format sformat;
+static ao_device *adevice = NULL;
+
+
+void ff_init()
 {
     /* Register all the codecs. */
     av_register_all();
 
-    AVFormatContext *container = avformat_alloc_context();
+    /* Initialize the AO library */
+    ao_initialize();
+}
+
+void ff_dest()
+{
+    if (container != NULL)
+        avformat_close_input(&container);
+
+    ao_shutdown();
+}
+
+
+/* Load an audio file. */
+void ff_open(const char *in_filename) {
+
+    if (container != NULL)
+        avformat_close_input(&container);
+
+    container = avformat_alloc_context();
+
     /* Open the media file. */
-    ff_error_woe( avformat_open_input(&container, input_filename, NULL, NULL) );
+    ff_error_woe( avformat_open_input(&container, in_filename, NULL, NULL) );
 
     /* Get information about the media stream. */
     ff_error_woe( avformat_find_stream_info(container, NULL) );
 
     /* Output stream info to stderr */
-    av_dump_format(container,0,input_filename,0);
+    av_dump_format(container,0,in_filename,0);
 
-    int stream_id = ta_get_audio_stream(container);
+    stream_id = ta_get_audio_stream(container);
 
     /* TODO: Is this used by anything? */
     /* AVDictionary *metadata = container->metadata; */
 
-    AVCodecContext *ctx = container->streams[stream_id]->codec;
+    ctx = container->streams[stream_id]->codec;
     AVCodec *codec = avcodec_find_decoder( ctx->codec_id );
     if (codec == NULL) error_woe("FFmpeg Error: Codec is not supported.");
 
@@ -88,10 +117,6 @@ void play_me(const char *const input_filename)
     /* TODO: Is this required? */
     /* ctx=avcodec_alloc_context3(codec); */
 
-    /* Initialize the AO library */
-    ao_initialize();
-
-    ao_sample_format sformat;
     enum AVSampleFormat sfmt = ctx->sample_fmt;
     switch (sfmt)
     {
@@ -112,16 +137,21 @@ void play_me(const char *const input_filename)
     sformat.channels = ctx->channels;
     sformat.rate = ctx->sample_rate;
     sformat.byte_format = AO_FMT_NATIVE;
-    /*sformat.matrix = "L,R";*/
-    sformat.matrix = 0;
+    sformat.matrix = "L,R";
+    /* sformat.matrix = 0; */
 
     int driver = ao_default_driver_id();
-    ao_device *adevice = ao_open_live(driver, &sformat, NULL);
+    adevice = ao_open_live(driver, &sformat, NULL);
     int error = errno;
     if (adevice == NULL)
     {
         fprintf(stderr, "error number:%i\n", error);
     }
+
+}
+
+void ff_play()
+{
 
     AVPacket p, *packet = &p; /* never use variable p again */
     /* TODO is this better? */
@@ -135,12 +165,16 @@ void play_me(const char *const input_filename)
     packet->data = buffer;
     packet->size = BUFFER_SIZE;
 
+    /* TODO: Add error detection. */
+    /* if (container == NULL) return -5; */
     int frameFinished = 0;
     while ( av_read_frame(container, packet) >= 0 )
     {
         if (packet->stream_index == stream_id)
         {
-            /* int len = avcodec_decode_audio4(ctx, frame, &frameFinished, packet); */
+            /* TODO: Add error detection. */
+            /* if (ctx == NULL) return -4; */
+            /* int len = */
             avcodec_decode_audio4(ctx, frame, &frameFinished, packet);
 
             if (frameFinished)
@@ -154,7 +188,9 @@ void play_me(const char *const input_filename)
 
     av_packet_unref(packet);
     av_frame_free(&frame);
-
-    ao_shutdown();
-    avformat_close_input(&container);
 }
+
+void ff_pause()
+{
+}
+

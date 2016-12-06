@@ -1,10 +1,29 @@
+#include <stdio.h>
+
 #include "player.h"
 #include "ffmpeg.h"
 
-void player(int fd_read, int fd_write)
-{
 
+
+static inline void plr_load_lib() {
+    /* TODO: Load the functions pointed to dynamically. */
     /* Currently defined in ffmpeg.c */
-    play_me("/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./10.Happy_Returns.flac");
+    plr_init = &ff_init;
+    plr_open = &ff_open;
+    plr_play = &ff_play;
+    plr_pause = &ff_pause;
+}
 
+void *plr_thread_go(void *thread_arg)
+{
+    char *in_filename = (char *)thread_arg;
+
+    plr_load_lib();
+
+    plr_init();
+    plr_open(in_filename);
+    plr_play();
+
+    /* TODO: What is a useful value to return on thread termination? */
+    return NULL;
 }

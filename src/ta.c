@@ -3,7 +3,7 @@
 #include <curses.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <sys/types.h>
+/* #include <sys/types.h> */
 
 #include "ui.h"
 #include "player.h"
@@ -38,12 +38,9 @@ pid_t fork_me( void (*go)(int, int), int fd_read, int fd_write )
     /* pid returned to parent would be -1 so check errno */
 }
 
+
 int main (int argc, char* argv[])
 {
-    /* Fork media player module process. */
-    /* TODO: add two pipes and 4 file descriptors for this */
-    /* pid_t player_pid = */
-    fork_me(&player, -1, -1);
 
     /* init_ui(); */
 
@@ -64,6 +61,19 @@ int main (int argc, char* argv[])
     /* pid_t output_pid = */
     fork_me(&output, fd_out_read, -1);
 
+
+    /* If I don't want to use defaults
+    pthread_attr_t play_thread_attr
+    pthread_attr_init(&create);
+    */
+
+    char file_name[128] = "/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./10.Happy_Returns.flac";
+
+    pthread_t plr_thread_id;
+    pthread_create(&plr_thread_id,
+                   NULL,
+                   &plr_thread_go,
+                   (void *)file_name);
     Comm command;
     while (1)
     {
