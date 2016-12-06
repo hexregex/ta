@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <dlfcn.h>
 
+#include "input.h"
 #include "communicate.h"
 #include "log.h"
 
@@ -29,11 +30,39 @@ void load_keymap () {
     fclose(key_map_stream);
 }
 
+
+InCode in_char_to_code(unsigned char in_char)
+{
+    switch (in_char)
+    {
+        case ' ' : return SPACE;
+        case 27  : return ESC;
+        case ';' :
+        case ':' : return SEMICOLON;
+        case 'h' :
+        case 'H' : return H;
+        case 'j' :
+        case 'J' : return J;
+        case 'k' :
+        case 'K' : return K;
+        case 'l' :
+        case 'L' : return L;
+        case 'q' :
+        case 'Q' : return Q;
+        default  : return NOP;
+    }
+}
+
+
 void in_process_go(int fd_write_to_main) {
     void *dynahand = NULL;
-    void (*input_init)();
-    char (*input_keypress)();
-    void (*input_clean)();
+    void (*in_init)();
+    char (*in_keypress)();
+    void (*in_dest)();
+
+    /* The following section (until while) dynamically loads the
+       libtermios_input library and links the functions needed.
+       (Dynamic loading and linking at runtime: implementing a plug-in.) */
 
     /* TODO make the selection of input library to load conditional. */
     dlerror();
@@ -42,41 +71,35 @@ void in_process_go(int fd_write_to_main) {
         log_write(dlerror());
 
     /* the following code segments maybe could be done with a function */
-    *(void **)(&input_init) = dlsym(dynahand, "tios_init");
-    if (input_init == NULL)
+    *(void **)(&in_init) = dlsym(dynahand, "tios_init");
+    if (in_init == NULL)
         log_write(dlerror());
     else
-        input_init();
+        in_init();
 
-    *(void **)(&input_keypress) = dlsym(dynahand, "tios_keypress");
-    if (input_keypress == NULL)
+    *(void **)(&in_keypress) = dlsym(dynahand, "tios_keypress");
+    if (in_keypress == NULL)
         log_write(dlerror());
 
 
     while (1) {
-    printf("input is here\n");
-    log_write("input_while-start");
+        printf("input is here\n");
+        log_write("input_while-start");
 
-        /* TODO: Figure out how to gracefully terminate this process
-           when SIGTERM in recieved. */
-
-        /*key = getch();*/
-
-        Comm xyz = {input_keypress()};
-        Comm *command = &xyz;
-
-        log_write_comm(command);
-
-        comm_send(fd_write_to_main, command);
+        /* Wait for input then send input code to main. */
+        Comm in_comm;
+        in_comm.code = in_keypress();
+        log_write_comm(&in_comm);
+        comm_send(fd_write_to_main, &in_comm);
 
         log_write("input_while-end");
     }
 
-    *(void **)(&input_clean) = dlsym(dynahand, "tios_clean");
-    if (input_clean == NULL)
+    *(void **)(&in_dest) = dlsym(dynahand, "tios_clean");
+    if (in_dest == NULL)
         log_write(dlerror());
     else
-        input_clean();
+        in_dest();
 
     if(dlclose(dynahand) != 0)
         log_write(dlerror());

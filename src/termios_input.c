@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <termios.h>
 
+#include "input.h"
+
 static struct termios tios;
 static struct termios other;
 
@@ -16,9 +18,9 @@ void tios_init()
     tcsetattr(STDIN_FILENO, TCSANOW, &tios);
 }
 
-char tios_keypress()
+InCode tios_keypress()
 {
-    return getchar();
+    return in_char_to_code( (unsigned char)getchar() );
 }
 
 void tios_clean()

@@ -29,6 +29,7 @@ void comm_connect(int *fd_read, int *fd_write)
   log_write("**************************");
   log_write_int(*fd_read);
   log_write_int(*fd_write);
+  log_write("**************************");
 }
 
 void comm_send(int pipe, const Comm *command) {
@@ -43,7 +44,6 @@ void comm_send(int pipe, const Comm *command) {
     log_write("comm_send-end");
 }
 
-
 void comm_recv(int pipe, Comm *command)
 {
     log_write("comm_recv-start");
@@ -53,6 +53,7 @@ void comm_recv(int pipe, Comm *command)
     log_write("comm_recv-end");
 }
 
+/* Gee this is looking more and more OO like. */
 void comm_to_string(const Comm *command, char *string)
 {
     sprintf(string, "%c", command->code);
