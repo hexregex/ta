@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <signal.h>
 
 #include <libavutil/samplefmt.h>
 #include <libavutil/mathematics.h>
@@ -11,6 +12,8 @@
 #include <libswscale/swscale.h>
 #include <ao/ao.h>
 #include <pulse/simple.h>
+
+#include "log.h"
 
 #define ERR_BUFF_SIZE 80
 #define AVCODEC_MAX_AUDIO_FRAME_SIZE 192000
@@ -38,10 +41,11 @@ void ff_error_woe(int error)
 }
 
 static inline
-int ta_get_audio_stream(AVFormatContext *format_context)
+int ff_get_audio_stream(AVFormatContext *format_context)
 {
     /* Locate the audio stream */
-    int i, stream = -1;
+    int stream = -1;
+    unsigned int i;
     for (i = 0; i < format_context->nb_streams; i++)
     {
         /* TODO: Compiler warns "codec" is deprecated. Fix. */
@@ -101,7 +105,7 @@ void ff_open(const char *in_filename) {
     /* Output stream info to stderr */
     av_dump_format(container,0,in_filename,0);
 
-    stream_id = ta_get_audio_stream(container);
+    stream_id = ff_get_audio_stream(container);
 
     /* TODO: Is this used by anything? */
     /* AVDictionary *metadata = container->metadata; */
@@ -191,6 +195,8 @@ void ff_play()
 
 void ff_pause()
 {
+  printf("**********************Made it to pause************************");
+  log_write("Received a pause event!!!!!!!");
 }
 
 

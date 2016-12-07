@@ -13,6 +13,13 @@ typedef enum
     TRACK
 } PlrCode;
 
+typedef struct
+{
+    int fd_read;
+    int fd_write;
+    char *file_names[2];
+} PlrThreadData;
+
 /* 'plr' == player */
 void (*plr_init)();
 void (*plr_open)(const char *);

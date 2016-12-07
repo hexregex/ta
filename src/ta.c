@@ -1,3 +1,4 @@
+/* #define _XOPEN_SOURCE */
 #include <stdio.h>
 #include <stdlib.h>
 #include <curses.h>
@@ -43,7 +44,7 @@ pid_t fork_me(void (*go)(int), int fd)
 static inline
 void ta_dest(pid_t in_pid, pid_t out_pid, pthread_t plr_thread_id)
 {
-    /* todo: send catchable signals to input, output, and player, and make
+    /* TODO: send catchable signals to input, output, and player, and make
      * them terminate gracefully. */
     /* kill input process */
     kill(in_pid, SIGKILL);
@@ -61,7 +62,8 @@ int main (int argc, char* argv[])
     /* init_ui(); */
 
     /* File descriptors for the communication pipes.
-       'in' == input, 'out' == output,  'plr' == player */
+     * 'in' == input, 'out' == output, 'plr' == player
+     *************************************************/
     int in_write_to_main;   /* input  */
     int main_read_from_in;  /*________*/
     int main_write_to_out;  /* output */
@@ -91,20 +93,26 @@ int main (int argc, char* argv[])
     pthread_attr_init(&create);
     */
 
-    char *file_names[] = {"/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./10.Happy_Returns.flac",
-                          "/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./11.Ascendant_Here_On....flac"};
+    /* Pack data to send to the player thread. */
+    PlrThreadData plr_thread_data =
+    {
+        plr_read_from_main,
+        plr_write_to_main,
+        {"/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./10.Happy_Returns.flac",
+         "/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./11.Ascendant_Here_On....flac"}
+    };
 
     /* Spawn player thread. */
     pthread_t plr_thread_id;
     pthread_create(&plr_thread_id,
                    NULL,
                    &plr_thread_go,
-                   (void *)&file_names);
+                   (void *)&plr_thread_data);
     Comm command;
     while (1)
     {
 
-        /* printf("main is here\n"); */
+        printf("main is here\n");
         log_write("main_while_start");
         comm_recv(main_read_from_in, &command);
 
@@ -115,9 +123,22 @@ int main (int argc, char* argv[])
             break;
         }
 
+        if ((InCode)command.code == SPACE)
+        {
+            printf("got a space\n");
+            Comm command2;
+            command2.code = PAUSE;
+            comm_send(main_write_to_plr, &command2);
+            /* Send user signal to player to let it know there is a command
+             * waiting for it to read. */
+            pthread_kill(plr_thread_id, SIGUSR1);
+
+        }
+
         comm_send(main_write_to_out, &command);
     }
 
   /* Holy explicit Batman! */
   exit(0);
+  /* TODO: Return some useful exit codes. */
 }
