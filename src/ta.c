@@ -62,16 +62,16 @@ int main (int argc, char* argv[])
     /* init_ui(); */
 
     /* File descriptors for the communication pipes.
-     * 'in' == input, 'out' == output, 'plr' == player
-     *************************************************/
-    int in_write_to_main;   /* input  */
-    int main_read_from_in;  /*________*/
-    int main_write_to_out;  /* output */
-    int out_read_from_main; /*________*/
-    int plr_write_to_main;  /* player */
-    int main_read_from_plr; /*        */
-    int main_write_to_plr;  /*        */
-    int plr_read_from_main; /*________*/
+     * 'in' == input, 'out' == output, 'plr' == player */
+                            /* __________    */
+    int main_read_from_in;  /* | input  |  4 */
+    int in_write_to_main;   /* |________|  5 */
+    int out_read_from_main; /* | output |  6 */
+    int main_write_to_out;  /* |________|  7 */
+    int main_read_from_plr; /* | player |  8 */
+    int plr_write_to_main;  /* |        |  9 */
+    int plr_read_from_main; /* |        | 10 */
+    int main_write_to_plr;  /* |________| 11 */
 
     /* Create pipe from input to main then fork input process. */
     comm_connect(&main_read_from_in, &in_write_to_main);
@@ -135,7 +135,7 @@ int main (int argc, char* argv[])
 
         }
 
-        comm_send(main_write_to_out, &command);
+        //comm_send(main_write_to_out, &command);
     }
 
   /* Holy explicit Batman! */

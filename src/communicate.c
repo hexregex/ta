@@ -27,13 +27,14 @@ void comm_connect(int *fd_read, int *fd_write)
   *fd_write = fildes[1];
 
   log_write("**************************");
-  log_write_int(*fd_read);
-  log_write_int(*fd_write);
+  log_write_int("", *fd_read);
+  log_write_int("", *fd_write);
   log_write("**************************");
 }
 
 void comm_send(int pipe, const Comm *command) {
-    log_write("comm_send-start");
+    printf("comm_send_start: %i\n", pipe);
+    log_write_int("comm_send-start", pipe);
 
     if (command == NULL)
     {
@@ -41,16 +42,20 @@ void comm_send(int pipe, const Comm *command) {
     }
 
     write(pipe, command, sizeof(Comm));
-    log_write("comm_send-end");
+
+    printf("comm_send_end: %i\n", pipe);
+    log_write_int("comm_send-end", pipe);
 }
 
 void comm_recv(int pipe, Comm *command)
 {
-    log_write("comm_recv-start");
+    printf("comm_recv-start: %i\n", pipe);
+    log_write_int("comm_recv-start", pipe);
 
     read(pipe, command, sizeof(Comm));
 
-    log_write("comm_recv-end");
+    printf("comm_recv-end: %i\n", pipe);
+    log_write_int("comm_recv-end", pipe);
 }
 
 /* Gee this is looking more and more OO like. */

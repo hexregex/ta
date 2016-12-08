@@ -15,11 +15,14 @@ int log_write(const char *log_message)
 }
 
 /* Convert an int to a string and write to the log file. */
-int log_write_int(int value)
+int log_write_int(const char *log_message, int value)
 {
-    char log_message[30];
-    sprintf(log_message, "%i", value);
-    return log_write(log_message);
+    char buffer1[80];
+    strcpy(buffer1, log_message);
+    char buffer2[20];
+    sprintf(buffer2, ": %i", value);
+    strcat(buffer1, buffer2);
+    return log_write(buffer1);
 }
 
 int log_write_comm(const Comm *command)
