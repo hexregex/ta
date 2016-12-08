@@ -60,6 +60,7 @@ void ta_dest(pid_t in_pid, pid_t out_pid, pthread_t plr_thread_id)
 
 int main (int argc, char* argv[])
 {
+
     /* init_ui(); */
 
     /* File descriptors for the communication pipes.
@@ -99,9 +100,26 @@ int main (int argc, char* argv[])
     {
         plr_read_from_main,
         plr_write_to_main,
-        {"/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./10.Happy_Returns.flac",
-         "/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./11.Ascendant_Here_On....flac"}
+        {}
     };
+
+    /* TODO: Quick and dirty, improve this section. */
+    if (argc > 1)
+    {
+        int i;
+        for (i = 0; i < MAX_FILES; i++)
+        {
+            /* TODO: find out if array elements which are pointers are
+               automatically initialized to NULL or not. */
+            plr_thread_data.file_names[i] = (i < argc - 1) ? argv[i] : NULL;
+        }
+    }
+    else
+    {
+        /* Default for local development and testing. */
+        plr_thread_data.file_names[0] = "/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./10.Happy_Returns.flac";
+        plr_thread_data.file_names[1] = "/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./11.Ascendant_Here_On....flac";
+    }
 
     /* Spawn player thread. */
     pthread_t plr_thread_id;

@@ -1,6 +1,8 @@
 #ifndef AT_PLAYER_TA
 #define AT_PLAYER_TA
 
+#define MAX_FILES 32
+
 typedef enum
 {
     PLAY,
@@ -17,7 +19,7 @@ typedef struct
 {
     int fd_read;
     int fd_write;
-    char *file_names[2];
+    char *file_names[MAX_FILES];
 } PlrThreadData;
 
 /* 'plr' == player */

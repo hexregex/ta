@@ -79,6 +79,12 @@ InCode in_str_to_code(const char *in_str)
 
 InCode tios_keypress()
 {
+    /* TODO: Fix bug.  If multiple single character keypresses make it to
+     * stdin before the first keypress can be read the algorithm will treat
+     * them as a single multi-character keypress. Need to check to make
+     * sure that multiple characters in stdin are not individual keypresses
+     * before processing as a single keypress. */
+
     char string[8];
     memset(string, 0, 8);
     int old_file_flags = fcntl(STDIN_FILENO, F_GETFL);
