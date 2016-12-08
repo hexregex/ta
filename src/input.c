@@ -32,49 +32,6 @@ void load_keymap () {
 }
 
 
-InCode in_str_to_code(const char *in_str)
-{
-    int str_len = strlen(in_str);
-    /* Raw terminal input sends ESC then '[' to introduce control sequences.
-     * Decode these escape sequences to capture cursor movement keypresses. */
-    if (str_len >= 3
-        && in_str[0] == 27 /* ESC */
-        && in_str[1] == '[')
-    {
-        switch (in_str[2])
-        {
-            case 'A': return UP;
-            case 'B': return DOWN;
-            case 'C': return RIGHT;
-            case 'D': return LEFT;
-            default : return NOP;
-        }
-    } /* Get keypresses from keys which send single characters. */
-    else if (str_len == 1)
-    {
-        switch (in_str[0])
-        {
-            case ' ': return SPACE;
-            case 27 : return ESC;
-            case ';':
-            case ':': return SEMICOLON;
-            case 'h':
-            case 'H': return H;
-            case 'j':
-            case 'J': return J;
-            case 'k':
-            case 'K': return K;
-            case 'l':
-            case 'L': return L;
-            case 'q':
-            case 'Q': return Q;
-            default : return NOP;
-        }
-    }
-    return NOP;
-}
-
-
 void in_process_go(int fd_write_to_main) {
     void *dynahand = NULL;
     void (*in_init)();
