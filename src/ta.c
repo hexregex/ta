@@ -1,4 +1,5 @@
-/* #define _XOPEN_SOURCE */
+#define _XOPEN_SOURCE 700
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <curses.h>
@@ -116,16 +117,17 @@ int main (int argc, char* argv[])
         log_write("main_while_start");
         comm_recv(main_read_from_in, &command);
 
+        log_write_int("Input command received by main",(InCode)command.code);
         /* User quit the program. */
         if ((InCode)command.code == Q || (InCode)command.code == ESC)
         {
+            printf("made it to the end here.");
             ta_dest(in_pid, out_pid, plr_thread_id);
             break;
         }
 
         if ((InCode)command.code == SPACE)
         {
-            printf("got a space\n");
             Comm command2;
             command2.code = PAUSE;
             comm_send(main_write_to_plr, &command2);
@@ -134,6 +136,8 @@ int main (int argc, char* argv[])
             pthread_kill(plr_thread_id, SIGUSR1);
 
         }
+
+        //if ((InCode)command.code == )
 
         //comm_send(main_write_to_out, &command);
     }

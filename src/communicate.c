@@ -61,5 +61,5 @@ void comm_recv(int pipe, Comm *command)
 /* Gee this is looking more and more OO like. */
 void comm_to_string(const Comm *command, char *string)
 {
-    sprintf(string, "%c", command->code);
+    sprintf(string, "%i", command->code);
 }

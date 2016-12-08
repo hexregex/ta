@@ -1,12 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
 #include "communicate.h"
+
+int truncate = 1;
 
 /* Write a string to the log file. */
 int log_write(const char *log_message)
 {
   int count;
   FILE *log;
+  if (truncate == 1)
+  {
+    log = fopen("logfile", "w");
+    fclose(log);
+    truncate = 0;
+  }
   log = fopen("logfile", "a");
   count = fprintf(log, "%s\n", log_message);
   //count = fprintf(stderr, "%s\n", log_message);

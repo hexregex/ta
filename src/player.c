@@ -26,22 +26,17 @@ static inline void plr_load_lib() {
     plr_seek = ff_seek;
 }
 
+
 void plr_pause_sig_handler(int signo)
 {
     printf("player is here. player is here.\n");
 
-    Comm command;
     log_write("first comm_recv start");
+    Comm command;
     comm_recv(fd_read_from_main, &command);
 
-    switch (command.code)
-    {
-        case PLAY: plr_play(); break;
-        case PAUSE: plr_pause(); break;
-    }
-
-    int sig_which_was_removed;
-    sigset_t ss;
+    int sig; /* Assigned the value of the signal removed by sigwait(). */
+    sigset_t ss; /* Signals to wait for, in this case assigned to SIGUSR1. */
     sigemptyset(&ss);
     sigaddset(&ss, SIGUSR1);
 
@@ -51,7 +46,7 @@ void plr_pause_sig_handler(int signo)
     /* Wait here until another pause signal is pending (it will be blocked),
        then remove the pause signal from the list of pending signals (so this
        handler function won't be called again immediately on exit). */
-    sigwait(&ss, &sig_which_was_removed);
+    sigwait(&ss, &sig);
     log_write("second comm_recv start");
     /* Next remove from the pipe the command which was sent before the signal
        just removed was generated (both by main). */
@@ -61,16 +56,31 @@ void plr_pause_sig_handler(int signo)
        was caught. (Resume audio playback.) */
 }
 
+void plr_other_sig_handler(int signo) {
+
+    Comm command;
+    comm_recv(fd_read_from_main, &command);
+
+
+}
+
 /* Set up signal handler to catch user signal from main. */
 void plr_sig_init()
 {
-    struct sigaction sa;
-    sa.sa_handler = plr_pause_sig_handler;
-    /* Block all signals while the signal handler is running. */
-    sigemptyset(&sa.sa_mask);
+    struct sigaction sa_pause;
+    sa_pause.sa_handler = plr_pause_sig_handler;
+    /* Block no signals (except SIGUSR1) while the signal handler is running. */
+    sigemptyset(&sa_pause.sa_mask);
     /* Allow functions which error out if interrupted to restart. */
-    sa.sa_flags = SA_RESTART;
-    sigaction(SIGUSR1, &sa, NULL);
+    sa_pause.sa_flags = SA_RESTART;
+    sigaction(SIGUSR1, &sa_pause, NULL);
+
+    struct sigaction sa_other;
+    sa_other.sa_handler = plr_other_sig_handler;
+    /* Block all signals while the signal handler is running. */
+    sigfillset(&sa_other.sa_mask);
+    sa_other.sa_flags = SA_RESTART;
+    sigaction(SIGUSR2, &sa_other, NULL);
 }
 
 void *plr_thread_go(void *thread_arg)

@@ -2,7 +2,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <termios.h>
+#include <fcntl.h>
+#include <string.h>
 
+#include "log.h"
 #include "input.h"
 
 static struct termios tios;
@@ -31,7 +34,22 @@ void tios_init()
 
 InCode tios_keypress()
 {
-    return in_char_to_code( (unsigned char)getchar() );
+    char string[8];
+    memset(string, 0, 8);
+    int old_file_flags = fcntl(STDIN_FILENO, F_GETFL);
+    /* Wait to read one character from stdin. */
+    read(STDIN_FILENO, string, 1);
+    /* Set file status flags on stdin so read() won't wait for input. */
+    int new_file_flags = old_file_flags | O_NONBLOCK;
+    fcntl(STDIN_FILENO, F_SETFL, new_file_flags);
+    /* Read stdin if there is input else continue. */
+    read(STDIN_FILENO, string + 1, 3);
+    /* Reset file flags for stdin. */
+    fcntl(STDIN_FILENO, F_SETFL, old_file_flags);
+
+    log_write(string);
+
+    return in_str_to_code(string);
 }
 
 void tios_clean()
