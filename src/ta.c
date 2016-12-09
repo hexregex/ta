@@ -71,7 +71,7 @@ void ta_dest(pid_t in_pid, pid_t out_pid, pthread_t plr_thread_id)
     /* terminate the player thread. */
     pthread_kill(plr_thread_id, SIGKILL);
     /* TODO: Do any other program cleanup. */
-    printf("made it to the end here.");
+    log_write("Made it to the end here.");
 }
 
 
@@ -147,8 +147,6 @@ int main (int argc, char* argv[])
     Comm command;
     while (1)
     {
-
-        printf("main is here\n");
         log_write("main_while_start");
         comm_recv(main_read_from_in, &command);
 

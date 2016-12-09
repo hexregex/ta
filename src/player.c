@@ -36,8 +36,6 @@ static inline void plr_load_lib() {
 
 void plr_pause_sig_handler(int signo)
 {
-    printf("player is here. player is here.\n");
-
     log_write("first comm_recv start");
     Comm command;
     comm_recv(plr_fd_read_from_main, &command);
@@ -138,8 +136,16 @@ void *plr_thread_go(void *thread_arg)
     plr_load_lib();
 
     plr_init();
-    plr_open_curr_track();
-    plr_play();
+
+    /* TODO: Currently plr_curr_track is the
+       actual track number minus one.  I
+       should probably fix. */
+    while (plr_curr_track < plr_track_count)
+    {
+        plr_open_curr_track();
+        plr_play();
+        plr_move_to_next_track();
+    }
 
     /* TODO: What is a useful value to return on thread termination? */
     return NULL;

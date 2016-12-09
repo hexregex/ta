@@ -12,6 +12,7 @@
 #include <libswscale/swscale.h>
 #include <ao/ao.h>
 #include <pulse/simple.h>
+#include <string.h>
 
 #include "log.h"
 
@@ -21,7 +22,11 @@
 
 static void error_woe(const char *message)
 {
-    fprintf(stderr, "FFmpeg Error: %s\n", message);
+    const char *buffer;
+    buffer = (const char *)malloc(strlen(message) + 15);
+    sprintf(buffer, "FFmpeg Error: %s", message);
+    log_write(buffer);
+    free(buffer);
     exit(1);
 }
 
@@ -125,15 +130,15 @@ void ff_open(const char *in_filename) {
     switch (sfmt)
     {
         case AV_SAMPLE_FMT_U8:
-            printf("U8\n");
+            log_write("U8");
             sformat.bits = 8;
             break;
         case AV_SAMPLE_FMT_S16:
-            printf("S16\n");
+            log_write("S16");
             sformat.bits = 16;
             break;
         case AV_SAMPLE_FMT_S32:
-            printf("S32\n");
+            log_write("S32");
             sformat.bits = 32;
             break;
     }
@@ -149,7 +154,7 @@ void ff_open(const char *in_filename) {
     int error = errno;
     if (adevice == NULL)
     {
-        fprintf(stderr, "error number:%i\n", error);
+        log_write_int("error number", error);
     }
 
 }
@@ -184,9 +189,9 @@ void ff_play()
             {
                 ao_play(adevice, (char*)frame->extended_data[0],frame->linesize[0] );
             } else {
-                //printf("Not Finished\n");
+                //log_write("Not finished");
             }
-        } else printf("Some other packet possibly video\n");
+        }
     }
 
     av_packet_unref(packet);
@@ -195,8 +200,6 @@ void ff_play()
 
 void ff_pause()
 {
-  printf("**********************Made it to pause************************");
-  log_write("Received a pause event!!!!!!!");
 }
 
 

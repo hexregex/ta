@@ -59,9 +59,7 @@ void in_process_go(int fd_write_to_main) {
     if (in_keypress == NULL)
         log_write(dlerror());
 
-
     while (1) {
-        printf("input is here\n");
         log_write("input_while-start");
 
         /* Wait for input then send input code to main. */

@@ -33,7 +33,6 @@ void comm_connect(int *fd_read, int *fd_write)
 }
 
 void comm_send(int pipe, const Comm *command) {
-    printf("comm_send_start: %i\n", pipe);
     log_write_int("comm_send-start", pipe);
 
     if (command == NULL)
@@ -43,18 +42,15 @@ void comm_send(int pipe, const Comm *command) {
 
     write(pipe, command, sizeof(Comm));
 
-    printf("comm_send_end: %i\n", pipe);
     log_write_int("comm_send-end", pipe);
 }
 
 void comm_recv(int pipe, Comm *command)
 {
-    printf("comm_recv-start: %i\n", pipe);
     log_write_int("comm_recv-start", pipe);
 
     read(pipe, command, sizeof(Comm));
 
-    printf("comm_recv-end: %i\n", pipe);
     log_write_int("comm_recv-end", pipe);
 }
 
