@@ -19,7 +19,7 @@ typedef struct
 {
     int fd_read;
     int fd_write;
-    char *file_names[MAX_FILES];
+    const char *file_names[MAX_FILES];
 } PlrThreadData;
 
 /* 'plr' == player */

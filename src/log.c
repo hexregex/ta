@@ -43,3 +43,7 @@ int log_write_comm(const Comm *command)
     return log_write(comm_string);
 }
 
+int log_write_array_of_strings(const char **abc)
+{
+    while (*abc != NULL) log_write(*abc++);
+}

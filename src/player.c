@@ -8,10 +8,17 @@
 #include "communicate.h"
 #include "log.h"
 
+#define plr_move_to_next_track() plr_move_to_track(plr_curr_track + 1)
+#define plr_move_to_prev_track() plr_move_to_track(plr_curr_track - 1)
+#define plr_open_curr_track() plr_open(plr_playlist[plr_curr_track])
 
 /* File descriptors for read write pipes to main. */
-static int fd_read_from_main;
-static int fd_write_to_main;
+static int plr_fd_read_from_main;
+static int plr_fd_write_to_main;
+
+static const char **plr_playlist;
+static int plr_curr_track;
+static int plr_track_count;
 
 static inline void plr_load_lib() {
     /* TODO: Load the functions pointed to dynamically. */
@@ -33,7 +40,7 @@ void plr_pause_sig_handler(int signo)
 
     log_write("first comm_recv start");
     Comm command;
-    comm_recv(fd_read_from_main, &command);
+    comm_recv(plr_fd_read_from_main, &command);
 
     int sig; /* Assigned the value of the signal removed by sigwait(). */
     sigset_t ss; /* Signals to wait for, in this case assigned to SIGUSR1. */
@@ -50,17 +57,45 @@ void plr_pause_sig_handler(int signo)
     log_write("second comm_recv start");
     /* Next remove from the pipe the command which was sent before the signal
        just removed was generated (both by main). */
-    comm_recv(fd_read_from_main, &command);
+    comm_recv(plr_fd_read_from_main, &command);
     /* Finally exit this handler function allowing the player thread to resume
        execution where the (previous pause) signal which invoked this handler
        was caught. (Resume audio playback.) */
 }
 
+static inline void plr_set_track_count()
+{
+    int i;
+    for (i = 0; plr_playlist[i] != NULL; i++) {}
+    plr_track_count = i;
+}
+
+static inline void plr_move_to_track(int track)
+{
+    plr_curr_track = (track >= 0)
+        ? ( (track < plr_track_count) ? track : 0 )
+        : plr_track_count - 1 ;
+}
+
 void plr_other_sig_handler(int signo) {
 
     Comm command;
-    comm_recv(fd_read_from_main, &command);
+    comm_recv(plr_fd_read_from_main, &command);
 
+    /* TODO: When doing these operations I need to flush the buffer containing
+       the PCM audio so that little blurbs already read into the buffer before
+       this signal is caught will not be played before proceeding to play the
+       next or previous track */
+    switch (command.code) {
+        case PREVIOUS:
+            plr_move_to_prev_track();
+            plr_open_curr_track();
+            break;
+        case NEXT:
+            plr_move_to_next_track();
+            plr_open_curr_track();
+            break;
+    }
 
 }
 
@@ -87,14 +122,23 @@ void *plr_thread_go(void *thread_arg)
 {
     plr_sig_init();
 
-    fd_read_from_main = ((PlrThreadData *)thread_arg)->fd_read;
-    fd_write_to_main = ((PlrThreadData *)thread_arg)->fd_write;
-    char **in_filename = ((PlrThreadData *)thread_arg)->file_names;
+    plr_fd_read_from_main = ((PlrThreadData *)thread_arg)->fd_read;
+    plr_fd_write_to_main = ((PlrThreadData *)thread_arg)->fd_write;
+    plr_playlist = ((PlrThreadData *)thread_arg)->file_names;
+
+    /* Default to start playing the first track. */
+    plr_curr_track = 0;
+
+    /* Set the number of tracks in the playlist */
+    plr_set_track_count();
+    log_write_int("track count", plr_track_count);
+
+    log_write_array_of_strings(plr_playlist);
 
     plr_load_lib();
 
     plr_init();
-    plr_open(in_filename[1]);
+    plr_open_curr_track();
     plr_play();
 
     /* TODO: What is a useful value to return on thread termination? */

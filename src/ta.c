@@ -19,8 +19,25 @@
 #include "ffmpeg.h"
 #endif
 
+/* macros for signaling player based on keypress. */
+#define ta_either_keypress(in_code_1, in_code_2) \
+    (ta_keypress(in_code_1) || ta_keypress(in_code_2))
+#define ta_keypress(in_code) \
+    ((InCode)command.code == in_code)
+#define ta_signal_player(play_comm, signal)     \
+do                                           \
+{                                            \
+    Comm command2;                           \
+    command2.code = play_comm;               \
+    comm_send(main_write_to_plr, &command2); \
+    pthread_kill(plr_thread_id, signal);     \
+}                                            \
+while (0)
+/* ^ Do-while swallows trailing semicolon, preventing extra null statment. */
+
+
 static inline
-pid_t fork_me(void (*go)(int), int fd)
+pid_t ta_fork_me(void (*go)(int), int fd)
 {
     pid_t pid = fork();
     if (pid == 0)
@@ -53,14 +70,13 @@ void ta_dest(pid_t in_pid, pid_t out_pid, pthread_t plr_thread_id)
     kill (out_pid, SIGKILL);
     /* terminate the player thread. */
     pthread_kill(plr_thread_id, SIGKILL);
-
     /* TODO: Do any other program cleanup. */
+    printf("made it to the end here.");
 }
 
 
 int main (int argc, char* argv[])
 {
-
     /* init_ui(); */
 
     /* File descriptors for the communication pipes.
@@ -77,11 +93,11 @@ int main (int argc, char* argv[])
 
     /* Create pipe from input to main then fork input process. */
     comm_connect(&main_read_from_in, &in_write_to_main);
-    pid_t in_pid = fork_me(&in_process_go, in_write_to_main);
+    pid_t in_pid = ta_fork_me(&in_process_go, in_write_to_main);
 
     /* Create pipe from main to output then fork output process. */
     comm_connect(&out_read_from_main, &main_write_to_out);
-    pid_t out_pid = fork_me(&out_process_go, out_read_from_main);
+    pid_t out_pid = ta_fork_me(&out_process_go, out_read_from_main);
 
     /* Create read/write pipes between main and player. */
     comm_connect(&main_read_from_plr, &plr_write_to_main);
@@ -111,7 +127,8 @@ int main (int argc, char* argv[])
         {
             /* TODO: find out if array elements which are pointers are
                automatically initialized to NULL or not. */
-            plr_thread_data.file_names[i] = (i < argc - 1) ? argv[i] : NULL;
+            /* argv[1] is the first command line argument. */
+            plr_thread_data.file_names[i] = (i < argc - 1) ? argv[i + 1] : NULL;
         }
     }
     else
@@ -136,28 +153,20 @@ int main (int argc, char* argv[])
         comm_recv(main_read_from_in, &command);
 
         log_write_int("Input command received by main",(InCode)command.code);
-        /* User quit the program. */
-        if ((InCode)command.code == Q || (InCode)command.code == ESC)
-        {
-            printf("made it to the end here.");
+
+        /* TODO: Improve this whole selection and redirection process. */
+        /* TODO: Make keypress to operation mappings user customizable. */
+        if ta_either_keypress(Q, ESC)
+        {   /* User quit the program. */
             ta_dest(in_pid, out_pid, plr_thread_id);
             break;
         }
-
-        if ((InCode)command.code == SPACE)
-        {
-            Comm command2;
-            command2.code = PAUSE;
-            comm_send(main_write_to_plr, &command2);
-            /* Send user signal to player to let it know there is a command
-             * waiting for it to read. */
-            pthread_kill(plr_thread_id, SIGUSR1);
-
-        }
-
-        //if ((InCode)command.code == )
-
-        //comm_send(main_write_to_out, &command);
+        else if ta_keypress(SPACE) /* pause or resume */
+            ta_signal_player(PAUSE, SIGUSR1);
+        else if ta_either_keypress(K, UP)
+            ta_signal_player(PREVIOUS, SIGUSR2);
+        else if ta_either_keypress(J, DOWN)
+            ta_signal_player(NEXT, SIGUSR2);
     }
 
   /* Holy explicit Batman! */
