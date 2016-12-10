@@ -2,6 +2,10 @@
 #define AT_PLAYER_TA
 
 #define MAX_FILES 32
+#include <pthread.h>
+
+double plr_play_time;
+long plr_sec_play_time;
 
 typedef enum
 {
@@ -17,8 +21,9 @@ typedef enum
 
 typedef struct
 {
-    int fd_read;
-    int fd_write;
+    /* There used to be other data here.  Leaving as is in case I
+     * decide to add more again someday */
+    pthread_t ta_thread_id;
     const char *file_names[MAX_FILES];
 } PlrThreadData;
 

@@ -1,6 +1,6 @@
 #ifndef AT_OUTPUT_TA
 #define AT_OUTPUT_TA
 
-void out_process_go(int fd_read_from_main);
+void out_process_go();
 
 #endif /* AT_OUTPUT_TA */

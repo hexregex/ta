@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include "log.h"
+#include "player.h"
 
 #define ERR_BUFF_SIZE 80
 #define AVCODEC_MAX_AUDIO_FRAME_SIZE 192000
@@ -22,11 +23,11 @@
 
 static void error_woe(const char *message)
 {
-    const char *buffer;
-    buffer = (const char *)malloc(strlen(message) + 15);
+    char *buffer;
+    buffer = (char *)malloc(strlen(message) + 15);
     sprintf(buffer, "FFmpeg Error: %s", message);
     log_write(buffer);
-    free(buffer);
+    free((void *)buffer);
     exit(1);
 }
 
@@ -126,7 +127,10 @@ void ff_open(const char *in_filename) {
     /* TODO: Is this required? */
     /* ctx=avcodec_alloc_context3(codec); */
 
-    enum AVSampleFormat sfmt = ctx->sample_fmt;
+    /* TODO: Switched to get rid of warnings.  See if I can get to work
+     * with enumerated type. */
+    /* enum AVSampleFormat sfmt = ctx->sample_fmt; */
+    int sfmt = ctx->sample_fmt;
     switch (sfmt)
     {
         case AV_SAMPLE_FMT_U8:
@@ -154,7 +158,7 @@ void ff_open(const char *in_filename) {
     int error = errno;
     if (adevice == NULL)
     {
-        log_write_int("error number", error);
+        log_write_int("libao error number", error);
     }
 
 }
@@ -171,7 +175,6 @@ void ff_play()
 
     uint8_t buffer[BUFFER_SIZE];
     packet->data = buffer;
-    packet->size = BUFFER_SIZE;
 
     /* TODO: Add error detection. */
     /* if (container == NULL) return -5; */
@@ -184,6 +187,13 @@ void ff_play()
             /* if (ctx == NULL) return -4; */
             /* int len = */
             avcodec_decode_audio4(ctx, frame, &frameFinished, packet);
+
+            /* TODO seems like a waste of processing time to convert a
+               rational number to a double every pass through the loop.
+               See if I can optimize somehow. */
+            plr_play_time =
+                av_q2d( av_mul_q(container->streams[stream_id]->time_base,
+                                 (AVRational){ packet->pts, 1 }) );
 
             if (frameFinished)
             {

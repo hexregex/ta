@@ -4,6 +4,7 @@
 #include <dlfcn.h>
 #include <string.h>
 
+#include "ta.h"
 #include "input.h"
 #include "communicate.h"
 #include "log.h"
@@ -32,7 +33,7 @@ void load_keymap () {
 }
 
 
-void in_process_go(int fd_write_to_main) {
+void in_process_go() {
     void *dynahand = NULL;
     void (*in_init)();
     char (*in_keypress)();
@@ -66,7 +67,7 @@ void in_process_go(int fd_write_to_main) {
         Comm in_comm;
         in_comm.code = in_keypress();
         log_write_comm(&in_comm);
-        comm_send(fd_write_to_main, &in_comm);
+        comm_send(in_write_to_ta, &in_comm);
 
         log_write("input_while-end");
     }

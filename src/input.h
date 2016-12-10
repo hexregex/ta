@@ -20,6 +20,6 @@ typedef enum
 
 void load_keymap ();
 
-void in_process_go (int fd_write_to_main);
+void in_process_go();
 
 #endif /* AT_INPUT_TA */

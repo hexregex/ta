@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <signal.h>
 
+#include "ta.h"
 #include "ui.h"
 #include "player.h"
 #include "input.h"
@@ -29,7 +30,7 @@ do                                           \
 {                                            \
     Comm command2;                           \
     command2.code = play_comm;               \
-    comm_send(main_write_to_plr, &command2); \
+    comm_send(ta_write_to_plr, &command2); \
     pthread_kill(plr_thread_id, signal);     \
 }                                            \
 while (0)
@@ -37,13 +38,13 @@ while (0)
 
 
 static inline
-pid_t ta_fork_me(void (*go)(int), int fd)
+pid_t ta_fork_me(void (*go)())
 {
     pid_t pid = fork();
     if (pid == 0)
     {
         /* Executing the child process. */
-        go(fd);
+        go();
         /* TODO: What should the child process return? */
         /* It shouldn't matter because the 'go' functions
           should only return on program termination. */
@@ -74,34 +75,56 @@ void ta_dest(pid_t in_pid, pid_t out_pid, pthread_t plr_thread_id)
     log_write("Made it to the end here.");
 }
 
+static inline
+void *ta_sig_thread_go()
+{
+    //Comm command;
+    //comm_recv(ta_read_from_plr, &command);
+    //comm_send(ta_write_to_out, &command);
+    printf("%li\n", plr_sec_play_time);
+    log_write("Oh happy day, the signal made it here!");
+    return NULL;
+}
+
+static inline
+void ta_sig_handler()
+{
+    /* Handle the signal from the player on a different thread. */
+    pthread_t sig_thread_id;
+    pthread_create(&sig_thread_id, NULL, &ta_sig_thread_go, NULL);
+}
+
+static inline
+void ta_sig_init()
+{
+    struct sigaction sa;
+    sa.sa_handler = ta_sig_handler;
+    sigemptyset(&sa.sa_mask);
+    /* Allow functions which error out if interrupted to restart. */
+    sa.sa_flags = SA_RESTART;
+    sigaction(SIGURG, &sa, NULL);
+    /* ^ TODO: Find a better way.  Maybe real-time signals. Do something
+     * better than highjacking a system signal (SIGURG) which might be used
+     * for something else. */
+}
+
 
 int main (int argc, char* argv[])
 {
     /* init_ui(); */
-
-    /* File descriptors for the communication pipes.
-     * 'in' == input, 'out' == output, 'plr' == player */
-                            /* __________    */
-    int main_read_from_in;  /* | input  |  4 */
-    int in_write_to_main;   /* |________|  5 */
-    int out_read_from_main; /* | output |  6 */
-    int main_write_to_out;  /* |________|  7 */
-    int main_read_from_plr; /* | player |  8 */
-    int plr_write_to_main;  /* |        |  9 */
-    int plr_read_from_main; /* |        | 10 */
-    int main_write_to_plr;  /* |________| 11 */
+    ta_sig_init();
 
     /* Create pipe from input to main then fork input process. */
-    comm_connect(&main_read_from_in, &in_write_to_main);
-    pid_t in_pid = ta_fork_me(&in_process_go, in_write_to_main);
+    comm_connect(&ta_read_from_in, &in_write_to_ta);
+    pid_t in_pid = ta_fork_me(&in_process_go);
 
     /* Create pipe from main to output then fork output process. */
-    comm_connect(&out_read_from_main, &main_write_to_out);
-    pid_t out_pid = ta_fork_me(&out_process_go, out_read_from_main);
+    comm_connect(&out_read_from_ta, &ta_write_to_out);
+    pid_t out_pid = ta_fork_me(&out_process_go);
 
     /* Create read/write pipes between main and player. */
-    comm_connect(&main_read_from_plr, &plr_write_to_main);
-    comm_connect(&plr_read_from_main, &main_write_to_plr);
+    comm_connect(&ta_read_from_plr, &plr_write_to_ta);
+    comm_connect(&plr_read_from_ta, &ta_write_to_plr);
 
     /* TODO: Free up file descriptors
        which are not used by this process. */
@@ -111,13 +134,11 @@ int main (int argc, char* argv[])
     pthread_attr_init(&create);
     */
 
+    pthread_t ta_thread_id = pthread_self();
+    log_write_int("main thread id", ta_thread_id);
+
     /* Pack data to send to the player thread. */
-    PlrThreadData plr_thread_data =
-    {
-        plr_read_from_main,
-        plr_write_to_main,
-        {}
-    };
+    PlrThreadData plr_thread_data = { ta_thread_id, {NULL} };
 
     /* TODO: Quick and dirty, improve this section. */
     if (argc > 1)
@@ -138,17 +159,20 @@ int main (int argc, char* argv[])
         plr_thread_data.file_names[1] = "/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./11.Ascendant_Here_On....flac";
     }
 
+
     /* Spawn player thread. */
     pthread_t plr_thread_id;
     pthread_create(&plr_thread_id,
                    NULL,
                    &plr_thread_go,
                    (void *)&plr_thread_data);
+
+
     Comm command;
     while (1)
     {
         log_write("main_while_start");
-        comm_recv(main_read_from_in, &command);
+        comm_recv(ta_read_from_in, &command);
 
         log_write_int("Input command received by main",(InCode)command.code);
 
