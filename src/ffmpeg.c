@@ -226,6 +226,14 @@ void ff_repeat()
 
 void ff_seek(int seconds)
 {
+
+    /* TODO:  Occasionally this operation causes a segfault.  Probably
+     * something below (likely in av_seek_frame) which changes a value,
+     * reallocates memory, or changes a pointer.  When the signal
+     * handler which called this function exits a segfault is caused when
+     * execution continues in ff_play where the signal was caught.
+     * Find a solution.  Add mutex? Semaphore? Tell ff_play to restart
+     * it's play loop if a signal was caught? */
     log_write_int("ff_seek--start", seconds);
 
     int64_t seek_pos =
