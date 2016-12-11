@@ -74,6 +74,8 @@ static AVCodecContext *ctx = NULL;
 
 static ao_sample_format sformat;
 static ao_device *adevice = NULL;
+static AVPacket p;
+static AVPacket *packet = &p; /* Never use variable p again */
 
 
 void ff_init()
@@ -165,9 +167,6 @@ void ff_open(const char *in_filename) {
 
 void ff_play()
 {
-    AVPacket p, *packet = &p; /* Never use variable p again */
-    /* TODO is this better? */
-    /* AVPacket packet = malloc( sizeof( AVPacket ) ); */
     av_init_packet(packet);
 
     /* Allocate the frame */
@@ -225,8 +224,21 @@ void ff_repeat()
 {
 }
 
-void ff_seek()
+void ff_seek(int seconds)
 {
+    log_write_int("ff_seek--start", seconds);
+
+    int64_t seek_pos =
+        seconds
+        * (int64_t)av_q2d(av_div_q( (AVRational){1, 1},
+                                    container->streams[stream_id]->time_base ))
+        + packet->pts;
+
+    av_seek_frame( container,
+                   stream_id,
+                   seek_pos,
+                   (seconds < 0) ? AVSEEK_FLAG_BACKWARD : 0 );
+
 }
 
 

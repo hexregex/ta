@@ -108,6 +108,15 @@ void ta_sig_init()
      * for something else. */
 }
 
+static inline
+void ta_signal_player_seek(pthread_t pt_id, int seconds)
+{
+    Comm command;
+    command.code = SEEK;
+    command.data.i = seconds;
+    comm_send(ta_write_to_plr, &command);
+    pthread_kill(pt_id, SIGUSR2);
+}
 
 int main (int argc, char* argv[])
 {
@@ -189,7 +198,14 @@ int main (int argc, char* argv[])
             ta_signal_player(PREVIOUS, SIGUSR2);
         else if ta_either_keypress(J, DOWN)
             ta_signal_player(NEXT, SIGUSR2);
+        else if ta_either_keypress(H, LEFT)
+            ta_signal_player_seek(plr_thread_id, -10);
+        else if ta_either_keypress(L, RIGHT)
+            ta_signal_player_seek(plr_thread_id, 10);
+
     }
+
+
 
   /* Holy explicit Batman! */
   exit(0);

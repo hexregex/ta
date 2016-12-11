@@ -95,6 +95,9 @@ void plr_other_sig_handler() {
             plr_move_to_next_track();
             plr_open_curr_track();
             break;
+        case SEEK:
+            plr_seek(command.data.i);
+            break;
     }
 }
 

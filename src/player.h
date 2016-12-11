@@ -35,7 +35,7 @@ void (*plr_pause)();
 void (*plr_next)();
 void (*plr_previous)();
 void (*plr_repeat)();
-void (*plr_seek)();
+void (*plr_seek)(int);
 
 void *plr_thread_go(void *thread_arg);
 
