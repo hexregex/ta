@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <signal.h>
+#include <string.h>
 
 #include "ta.h"
 #include "ui.h"
@@ -138,11 +139,6 @@ int main (int argc, char* argv[])
     /* TODO: Free up file descriptors
        which are not used by this process. */
 
-    /* If I don't want to use defaults
-    pthread_attr_t play_thread_attr
-    pthread_attr_init(&create);
-    */
-
     pthread_t ta_thread_id = pthread_self();
     log_write_int("main thread id", ta_thread_id);
 
@@ -176,8 +172,20 @@ int main (int argc, char* argv[])
                    &plr_thread_go,
                    (void *)&plr_thread_data);
 
-
+    /* Load the track list. */
     Comm command;
+    command.code = LOAD_TRACK_LIST;
+    command.data.count = argc - 1;
+    comm_send(ta_write_to_out, &command);
+    int i;
+    for(i = 1; i < argc; i++)
+    {
+        command.code = TRACK;
+        command.data.track.number = i;
+        strcpy(command.data.track.name, argv[i]);
+        comm_send(ta_write_to_out, &command);
+    }
+
     while (1)
     {
         log_write("main_while_start");

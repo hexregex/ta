@@ -1,7 +1,7 @@
 #ifndef AT_PLAYER_TA
 #define AT_PLAYER_TA
 
-#define MAX_FILES 32
+#define MAX_FILES 64
 #include <pthread.h>
 
 double plr_play_time;
@@ -15,8 +15,7 @@ typedef enum
     PREVIOUS,
     REPEAT,
     SEEK,
-    RESET,
-    TRACK
+    RESET
 } PlrCode;
 
 typedef struct
