@@ -20,7 +20,7 @@
 void out_process_go()
 {
     void (*out_init)();
-    void (*out_track_list)(Track *track_list);
+    void (*out_track_list)(Track *track_list, int track_count);
     void (*out_track)(Track *track);
     void (*out_play_time)(int seconds);
     void (*out_operation)(OutCode operation);
@@ -38,7 +38,6 @@ void out_process_go()
 
     Track *track_list = NULL;
     int track_index = 0;
-    int is_loading_tracks = false;
     int track_count = 0;
     int loaded_track_count = 0;
 
@@ -46,47 +45,51 @@ void out_process_go()
     // printf("output flag non-block = %i\n", file_flags);
     while (1)
     {
-        log_write("output_while-start");
         Comm command;
         comm_recv(out_read_from_ta, &command);
+        log_write_int("output: Command received", command.code);
         switch ((OutCode)command.code)
         {
             case PLAY_TIME:
                 out_play_time(command.data.seconds);
                 break;
             case TRACK:
-                /* Either attempt to add one more track to the track list or
-                 * order track info be displayed. */
-                if (is_loading_tracks)
-                {
-                    if (++loaded_track_count <= track_count)
-                        /* Load one more track on the track list. */
-                        track_list[track_index++] = command.data.track;
-                    else
-                        is_loading_tracks = false;
-                }
-                else /* Output track info. */
-                    out_track(&command.data.track);
+                log_write("output: TRACK--start");
+                /* Output track info. */
+                out_track(&command.data.track);
                 break;
-            case PLAYING: break;
+            case PLAYING:
                 out_operation(PLAYING);
-            case PAUSED: break;
+                break;
+            case PAUSED:
                 out_operation(PAUSED);
+                break;
+            case LOAD_TRACK:
+                if (++loaded_track_count <= track_count)
+                {
+                    log_write("output: LOAD_TRACK");
+                    /* Load one more track on the track list. */
+                    track_list[track_index++] = command.data.track;
+                }
+                break;
             case LOAD_TRACK_LIST:
+                log_write("output: LOAD_TRACK_LIST--start");
                 /* Initiate the loading of the track list. LOAD_TRACK_LIST
                  * should be followed by a series of TRACK commands, one for
                  * each of the tracks to be loaded onto the track list. */
-                is_loading_tracks = true;
                 track_count = command.data.count;
                 loaded_track_count = 0;
                 track_list = realloc(track_list, track_count * sizeof(Track));
                 track_index = 0;
+                log_write("output: LOAD_TRACK_LIST--end");
+                break;
+            case TRACK_LIST:
+                out_track_list(track_list, track_count);
                 break;
             default: break;
         }
 
-        log_write("output_while-end");
-        log_write_comm(&command);
+        log_write_int("output: while--end", command.code);
     }
 
     free(track_list);

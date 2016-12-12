@@ -9,7 +9,6 @@
 #include <string.h>
 
 #include "ta.h"
-#include "ui.h"
 #include "player.h"
 #include "input.h"
 #include "output.h"
@@ -119,7 +118,7 @@ void ta_signal_player_seek(pthread_t pt_id, int seconds)
     pthread_kill(pt_id, SIGUSR2);
 }
 
-int main (int argc, char* argv[])
+int main (int argc, char **argv)
 {
     /* init_ui(); */
     ta_sig_init();
@@ -164,7 +163,6 @@ int main (int argc, char* argv[])
         plr_thread_data.file_names[1] = "/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./11.Ascendant_Here_On....flac";
     }
 
-
     /* Spawn player thread. */
     pthread_t plr_thread_id;
     pthread_create(&plr_thread_id,
@@ -180,18 +178,22 @@ int main (int argc, char* argv[])
     int i;
     for(i = 1; i < argc; i++)
     {
-        command.code = TRACK;
+        command.code = LOAD_TRACK;
         command.data.track.number = i;
         strcpy(command.data.track.name, argv[i]);
         comm_send(ta_write_to_out, &command);
     }
+
+    command.code = TRACK_LIST;
+    comm_send(ta_write_to_out, &command);
 
     while (1)
     {
         log_write("main_while_start");
         comm_recv(ta_read_from_in, &command);
 
-        log_write_int("Input command received by main",(InCode)command.code);
+        log_write_int("Input command received by main",
+                      (InCode)command.code);
 
         /* TODO: Improve this whole selection and redirection process. */
         /* TODO: Make keypress to operation mappings user customizable. */
@@ -210,12 +212,9 @@ int main (int argc, char* argv[])
             ta_signal_player_seek(plr_thread_id, -10);
         else if ta_either_keypress(L, RIGHT)
             ta_signal_player_seek(plr_thread_id, 10);
-
     }
 
-
-
-  /* Holy explicit Batman! */
-  exit(0);
-  /* TODO: Return some useful exit codes. */
+    /* Holy explicit Batman! */
+    exit(0);
+    /* TODO: Return some useful exit codes. */
 }

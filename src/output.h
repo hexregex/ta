@@ -7,7 +7,9 @@ typedef enum
     PAUSED,
     TRACK,
     LOAD_TRACK_LIST,
-    PLAY_TIME
+    LOAD_TRACK,
+    PLAY_TIME,
+    TRACK_LIST
 } OutCode;
 
 void out_process_go();
