@@ -62,12 +62,17 @@ void *ta_sig_thread_go()
     Comm command;
     comm_recv(out_read_from_plr, &command);
 
+    /* TODO: This code is redundant with the switch..case in
+     * out_process_go().  Combine the two switch..cases
+     * into a single function. */
     switch((OutCode)command.code)
     {
         case PLAY_TIME:
+            log_write_int("Display the play_time 2", command.data.seconds);
             out_play_time(command.data.seconds);
             break;
         case TRACK:
+            log_write("output: TRACK--start 2");
             out_track(&command.data.track);
             break;
         default: break;

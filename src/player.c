@@ -17,15 +17,25 @@
 
 #define plr_move_to_next_track() plr_move_to_track(plr_curr_track + 1)
 #define plr_move_to_prev_track() plr_move_to_track(plr_curr_track - 1)
-#define plr_open_curr_track() plr_open(plr_playlist[plr_curr_track])
-
-/* File descriptors for read write pipes to main. */
-
 
 static pid_t out_pid;
 static const char **plr_playlist;
 static int plr_curr_track;
 static int plr_track_count;
+
+
+static void plr_open_curr_track()
+{
+  Comm command;
+  command.code = TRACK;
+  plr_set_track(&command.data.track,
+                plr_curr_track + 1,
+                plr_playlist[plr_curr_track]);
+  comm_send(plr_write_to_out, &command);
+  kill(out_pid, SIGUSR1);
+
+  plr_open(plr_playlist[plr_curr_track]);
+}
 
 static inline void plr_load_lib() {
     /* TODO: Load the functions pointed to dynamically. */
@@ -38,6 +48,14 @@ static inline void plr_load_lib() {
     plr_previous = ff_previous;
     plr_repeat = ff_repeat;
     plr_seek = ff_seek;
+}
+
+void plr_set_track(Track *track, int track_number, const char *track_name)
+{
+        track->number = track_number;
+        strcpy(track->name, track_name);
+        /* TODO: Populate the duration property of track struct.
+         * right now the duration just outputs random(ish) data. */
 }
 
 void plr_pause_sig_handler()
@@ -83,7 +101,6 @@ static inline void plr_move_to_track(int track)
 }
 
 void plr_other_sig_handler() {
-
     Comm command;
     comm_recv(plr_read_from_ta, &command);
 
@@ -185,7 +202,6 @@ void *plr_thread_go(void *thread_arg)
         plr_play();
         plr_move_to_next_track();
     }
-
 
     /* TODO: What is a useful value to return on thread termination? */
     return NULL;

@@ -1,6 +1,9 @@
 #ifndef AT_PLAYER_TA
 #define AT_PLAYER_TA
 
+#include <signal.h>
+#include <stdint.h>
+
 #define MAX_FILES 64
 
 /* Global value for the current play time in seconds*/
@@ -22,9 +25,18 @@ typedef enum
 
 typedef struct
 {
+    uint16_t number;
+    char name[264];
+    char codec[32];
+    uint32_t sample_rate; /* hertz */
+    uint16_t duration; /* seconds */
+} Track;
+
+typedef struct
+{
     /* There used to be other data here.  Leaving as is in case I
      * decide to add more again someday */
-    pthread_t out_pid;
+    pid_t out_pid;
     const char *file_names[MAX_FILES];
 } PlrThreadData;
 
@@ -37,6 +49,8 @@ void (*plr_next)();
 void (*plr_previous)();
 void (*plr_repeat)();
 void (*plr_seek)(int);
+
+void plr_set_track(Track *track, int track_number, const char *track_name);
 
 void *plr_thread_go(void *thread_arg);
 

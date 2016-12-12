@@ -139,8 +139,7 @@ int main (int argc, char **argv)
     for(i = 1; i < argc; i++)
     {
         command.code = LOAD_TRACK;
-        command.data.track.number = i;
-        strcpy(command.data.track.name, argv[i]);
+        plr_set_track(&command.data.track, i, argv[i]);
         comm_send(ta_write_to_out, &command);
     }
 
