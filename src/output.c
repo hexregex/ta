@@ -4,36 +4,57 @@
 
 #include "ta.h"
 #include "output.h"
-#include "ncurses.h"
 #include "log.h"
 #include "communicate.h"
 
-#define USE_NCURSES
-#ifndef USE_NCURSES
+/* TODO: For dynamic load move this #define elsewhere. */
+#define TA_NCURSES
+#ifdef TA_NCURSES
 #include "ncurses.h"
 #endif
 
-/* TODO: standard defines this somewhere. */
-#define true 1
-#define false 0
+static void (*out_init)();
+static void (*out_dest)();
+static void (*out_track_list)(Track *track_list, int track_count);
+static void (*out_track)(Track *track);
+static void (*out_play_time_str)(const char *time_str);
+static void (*out_operation)(OutCode operation);
+
+static void out_play_time(int seconds)
+{
+  char time_str[12];
+  seconds_to_str(time_str, seconds);
+  out_play_time_str(time_str);
+}
+
+static inline out_load_lib() {
+    /* TODO: Make load dynamic.  dlsym() */
+    out_init = nc_init;
+    out_dest = nc_dest;
+    out_track_list = nc_track_list;
+    out_track = nc_track;
+    out_play_time_str = nc_play_time_str;
+    out_operation = nc_operation;
+}
+
+void seconds_to_str(char *str, int val)
+{
+    int sec, min;
+    sec = val % 60;
+    val /= 60;
+    min = val % 60;
+    val /= 60;
+
+    /* TODO: Improve the output format. */
+    if (val > 0)
+      sprintf(str, "%2i:%02i:%02i", val, min, sec);
+    else
+      sprintf(str, "%5i:%02i", min, sec);
+}
 
 void out_process_go()
 {
-    void (*out_init)();
-    void (*out_track_list)(Track *track_list, int track_count);
-    void (*out_track)(Track *track);
-    void (*out_play_time)(int seconds);
-    void (*out_operation)(OutCode operation);
-    void (*out_dest)();
-
-    /* TODO: Make load dynamic.  dlsym() */
-    out_init = nc_out_init;
-    out_track_list = nc_track_list;
-    out_track = nc_track;
-    out_play_time = nc_play_time;
-    out_operation = nc_operation;
-    out_dest = nc_dest;
-
+    out_load_lib();
     out_init();
 
     Track *track_list = NULL;
@@ -51,6 +72,7 @@ void out_process_go()
         switch ((OutCode)command.code)
         {
             case PLAY_TIME:
+                log_write_int("Display the play_time", command.data.seconds);
                 out_play_time(command.data.seconds);
                 break;
             case TRACK:

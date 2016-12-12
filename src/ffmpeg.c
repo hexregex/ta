@@ -110,8 +110,9 @@ void ff_open(const char *in_filename) {
     /* Get information about the media stream. */
     ff_error_woe( avformat_find_stream_info(container, NULL) );
 
+    /* TODO: Figure out how to redirect this out put to output module. */
     /* Output stream info to stderr */
-    av_dump_format(container,0,in_filename,0);
+    /* av_dump_format(container,0,in_filename,0); */
 
     stream_id = ff_get_audio_stream(container);
 

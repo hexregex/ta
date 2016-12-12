@@ -15,11 +15,6 @@
 #include "communicate.h"
 #include "log.h"
 
-#define USE_FFMPEG
-#ifdef USE_FFMPEG
-#include "ffmpeg.h"
-#endif
-
 /* macros for signaling player based on keypress. */
 #define ta_either_keypress(in_code_1, in_code_2) \
     (ta_keypress(in_code_1) || ta_keypress(in_code_2))
@@ -78,11 +73,12 @@ void ta_dest(pid_t in_pid, pid_t out_pid, pthread_t plr_thread_id)
 static inline
 void *ta_sig_thread_go()
 {
-    //Comm command;
-    //comm_recv(ta_read_from_plr, &command);
-    //comm_send(ta_write_to_out, &command);
-    printf("%li\n", plr_sec_play_time);
-    log_write("Oh happy day, the signal made it here!");
+    /* TODO: Select which output command to send. */
+
+    Comm command;
+    command.code = PLAY_TIME;
+    command.data.seconds = (int)plr_sec_play_time;
+    comm_send(ta_write_to_out, &command);
     return NULL;
 }
 

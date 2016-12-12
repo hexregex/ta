@@ -2,10 +2,12 @@
 #define AT_PLAYER_TA
 
 #define MAX_FILES 64
-#include <pthread.h>
 
-double plr_play_time;
+/* Global value for the current play time in seconds*/
 long plr_sec_play_time;
+
+/* Global value for (much more) precise play time in float */
+double plr_play_time;
 
 typedef enum
 {

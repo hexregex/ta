@@ -6,16 +6,20 @@
 
 #include "ta.h"
 #include "player.h"
-#include "ffmpeg.h"
 #include "communicate.h"
 #include "log.h"
 
+#define USE_FFMPEG
+#ifdef USE_FFMPEG
+#include "ffmpeg.h"
+#endif
 
 #define plr_move_to_next_track() plr_move_to_track(plr_curr_track + 1)
 #define plr_move_to_prev_track() plr_move_to_track(plr_curr_track - 1)
 #define plr_open_curr_track() plr_open(plr_playlist[plr_curr_track])
 
 /* File descriptors for read write pipes to main. */
+
 
 static pthread_t ta_thread_id;
 static const char **plr_playlist;
@@ -124,6 +128,9 @@ static inline void plr_sig_init()
 
 void *plr_time_thread_go()
 {
+    /* Setting to -1 always forces 0 value draw at beginning. */
+    plr_sec_play_time = -1;
+
     for (;;)
     {
         /* When the the play time value reaches the next whole second
