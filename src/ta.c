@@ -71,40 +71,6 @@ void ta_dest(pid_t in_pid, pid_t out_pid, pthread_t plr_thread_id)
 }
 
 static inline
-void *ta_sig_thread_go()
-{
-    /* TODO: Select which output command to send. */
-
-    Comm command;
-    command.code = PLAY_TIME;
-    command.data.seconds = (int)plr_sec_play_time;
-    comm_send(ta_write_to_out, &command);
-    return NULL;
-}
-
-static inline
-void ta_sig_handler()
-{
-    /* Handle the signal from the player on a different thread. */
-    pthread_t sig_thread_id;
-    pthread_create(&sig_thread_id, NULL, &ta_sig_thread_go, NULL);
-}
-
-static inline
-void ta_sig_init()
-{
-    struct sigaction sa;
-    sa.sa_handler = ta_sig_handler;
-    sigemptyset(&sa.sa_mask);
-    /* Allow functions which error out if interrupted to restart. */
-    sa.sa_flags = SA_RESTART;
-    sigaction(SIGURG, &sa, NULL);
-    /* ^ TODO: Find a better way.  Maybe real-time signals. Do something
-     * better than highjacking a system signal (SIGURG) which might be used
-     * for something else. */
-}
-
-static inline
 void ta_signal_player_seek(pthread_t pt_id, int seconds)
 {
     Comm command;
@@ -116,29 +82,27 @@ void ta_signal_player_seek(pthread_t pt_id, int seconds)
 
 int main (int argc, char **argv)
 {
-    /* init_ui(); */
-    ta_sig_init();
-
     /* Create pipe from input to main then fork input process. */
     comm_connect(&ta_read_from_in, &in_write_to_ta);
     pid_t in_pid = ta_fork_me(&in_process_go);
 
-    /* Create pipe from main to output then fork output process. */
+    /* Create pipe from main to output. */
     comm_connect(&out_read_from_ta, &ta_write_to_out);
+    /* Create pipe from player to output. */
+    comm_connect(&out_read_from_plr, &plr_write_to_out);
+    /* Fork output process */
     pid_t out_pid = ta_fork_me(&out_process_go);
 
-    /* Create read/write pipes between main and player. */
-    comm_connect(&ta_read_from_plr, &plr_write_to_ta);
+    /* Create pipe from main to player. */
     comm_connect(&plr_read_from_ta, &ta_write_to_plr);
 
     /* TODO: Free up file descriptors
        which are not used by this process. */
 
-    pthread_t ta_thread_id = pthread_self();
-    log_write_int("main thread id", ta_thread_id);
+    log_write_int("out pid", out_pid);
 
     /* Pack data to send to the player thread. */
-    PlrThreadData plr_thread_data = { ta_thread_id, {NULL} };
+    PlrThreadData plr_thread_data = { out_pid, {NULL} };
 
     /* TODO: Quick and dirty, improve this section. */
     if (argc > 1)

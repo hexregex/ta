@@ -6,6 +6,7 @@
 
 #include "ta.h"
 #include "player.h"
+#include "output.h"
 #include "communicate.h"
 #include "log.h"
 
@@ -21,7 +22,7 @@
 /* File descriptors for read write pipes to main. */
 
 
-static pthread_t ta_thread_id;
+static pid_t out_pid;
 static const char **plr_playlist;
 static int plr_curr_track;
 static int plr_track_count;
@@ -134,11 +135,15 @@ void *plr_time_thread_go()
     for (;;)
     {
         /* When the the play time value reaches the next whole second
-         * signal the main module to update the clock display. */
+         * signal the main module to update the play time display. */
         if (plr_sec_play_time != (long)plr_play_time)
         {
-            pthread_kill(ta_thread_id, SIGURG);
             plr_sec_play_time = (long)plr_play_time;
+            Comm command;
+            command.code = PLAY_TIME;
+            command.data.seconds = (int)plr_sec_play_time;
+            comm_send(plr_write_to_out, &command);
+            kill(out_pid, SIGUSR1);
         }
         /* TODO: Add a delay.  Literally make this thread stop for a short
          * time, otherwise this thread just wastes CPU processing time. */
@@ -151,7 +156,7 @@ void *plr_thread_go(void *thread_arg)
     log_write_int("player thread id", pthread_self());
     plr_sig_init();
 
-    ta_thread_id = ((PlrThreadData *)thread_arg)->ta_thread_id;
+    out_pid = ((PlrThreadData *)thread_arg)->out_pid;
     plr_playlist = ((PlrThreadData *)thread_arg)->file_names;
 
     /* Default to start playing the first track. */
@@ -165,12 +170,6 @@ void *plr_thread_go(void *thread_arg)
 
     plr_load_lib();
     plr_init();
-
-    /* These are for testing.
-    log_write_int("ta_thread_id in player", ta_thread_id);
-    log_write("plr_thread_go--pthread_kill--start");
-    int error = pthread_kill(ta_thread_id, SIGURG);
-    log_write_int("player pthread_kill error", error); */
 
     /* TODO: Currently plr_curr_track is the
        actual track number minus one.  I

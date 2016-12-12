@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <pthread.h>
+#include <signal.h>
 
 #include "ta.h"
 #include "output.h"
@@ -27,7 +29,7 @@ static void out_play_time(int seconds)
   out_play_time_str(time_str);
 }
 
-static inline out_load_lib() {
+static inline void out_load_lib() {
     /* TODO: Make load dynamic.  dlsym() */
     out_init = nc_init;
     out_dest = nc_dest;
@@ -52,9 +54,54 @@ void seconds_to_str(char *str, int val)
       sprintf(str, "%5i:%02i", min, sec);
 }
 
+static inline
+void *ta_sig_thread_go()
+{
+    /* TODO: Select which output command to send. */
+
+    Comm command;
+    comm_recv(out_read_from_plr, &command);
+
+    switch((OutCode)command.code)
+    {
+        case PLAY_TIME:
+            out_play_time(command.data.seconds);
+            break;
+        case TRACK:
+            out_track(&command.data.track);
+            break;
+        default: break;
+    }
+
+    return NULL;
+}
+
+static inline
+void ta_sig_handler()
+{
+    /* Handle the signal from the player on a different thread. */
+    pthread_t sig_thread_id;
+    pthread_create(&sig_thread_id, NULL, &ta_sig_thread_go, NULL);
+}
+
+static inline
+void ta_sig_init()
+{
+    struct sigaction sa;
+    sa.sa_handler = ta_sig_handler;
+    sigemptyset(&sa.sa_mask);
+    /* Allow functions which error out if interrupted to restart. */
+    sa.sa_flags = SA_RESTART;
+    sigaction(SIGUSR1, &sa, NULL);
+    /* ^ TODO: Find a better way.  Maybe real-time signals. Do something
+     * better than highjacking a system signal (SIGURG) which might be used
+     * for something else. */
+}
+
 void out_process_go()
 {
     out_load_lib();
+    ta_sig_init();
     out_init();
 
     Track *track_list = NULL;

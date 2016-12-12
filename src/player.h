@@ -24,7 +24,7 @@ typedef struct
 {
     /* There used to be other data here.  Leaving as is in case I
      * decide to add more again someday */
-    pthread_t ta_thread_id;
+    pthread_t out_pid;
     const char *file_names[MAX_FILES];
 } PlrThreadData;
 
