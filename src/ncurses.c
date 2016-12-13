@@ -5,6 +5,7 @@
 #include "log.h"
 
 #define LEFT_EDGE 2
+#define TOP_EDGE 2
 
 void nc_init()
 {
@@ -38,7 +39,9 @@ void nc_track_list(Track *track_list, int track_count)
     for(i = 0; i < track_count; i++)
     {
         log_write_int("Printing track info. Track no", track_list[i].number);
-        mvprintw(1 + i, 2, "%i: %s", track_list[i].number, track_list[i].name);
+        move(TOP_EDGE + i, LEFT_EDGE);
+        clrtoeol();
+        mvprintw(TOP_EDGE + i, LEFT_EDGE, "%3i: %s", track_list[i].number, track_list[i].name);
     }
     refresh();
     log_write("nc_track_list--end");
@@ -52,7 +55,9 @@ void nc_track(Track *track)
     seconds_to_str(duration_str, (int)track->duration);
 
     mvprintw(LINES - 5, LEFT_EDGE, "Playing:");
-    mvprintw(LINES - 4, LEFT_EDGE, "%i - %s", track->number, track->name);
+    move(LINES - 4, LEFT_EDGE);
+    clrtoeol();
+    mvprintw(LINES - 4, LEFT_EDGE, "%3i - %s", track->number, track->name);
     /* mvprintw(LINES - 3, LEFT_EDGE, "%i", track.sample_rate); */
     mvprintw(LINES - 2, COLS - 9, duration_str);
 

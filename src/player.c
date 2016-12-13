@@ -30,7 +30,8 @@ static void plr_open_curr_track()
   command.code = TRACK;
   plr_set_track(&command.data.track,
                 plr_curr_track + 1,
-                plr_playlist[plr_curr_track]);
+                plr_playlist[plr_curr_track],
+                0);
   comm_send(plr_write_to_out, &command);
   kill(out_pid, SIGUSR1);
 
@@ -50,12 +51,14 @@ static inline void plr_load_lib() {
     plr_seek = ff_seek;
 }
 
-void plr_set_track(Track *track, int track_number, const char *track_name)
+void plr_set_track(Track *track,
+                   int track_number,
+                   const char *track_name,
+                   int track_duration)
 {
         track->number = track_number;
         strcpy(track->name, track_name);
-        /* TODO: Populate the duration property of track struct.
-         * right now the duration just outputs random(ish) data. */
+        track->duration = track_duration;
 }
 
 void plr_pause_sig_handler()

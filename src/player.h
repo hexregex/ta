@@ -50,7 +50,10 @@ void (*plr_previous)();
 void (*plr_repeat)();
 void (*plr_seek)(int);
 
-void plr_set_track(Track *track, int track_number, const char *track_name);
+void plr_set_track(Track *track,
+                   int track_number,
+                   const char *track_name,
+                   int track_duration);
 
 void *plr_thread_go(void *thread_arg);
 
