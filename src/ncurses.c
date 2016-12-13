@@ -14,6 +14,7 @@ void nc_init()
     cbreak();
     noecho();
     log_write("nc_out_init--end");
+    curs_set(0);
 }
 
 void nc_dest()
