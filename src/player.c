@@ -26,16 +26,18 @@ static int plr_track_count;
 
 static void plr_open_curr_track()
 {
-  Comm command;
-  command.code = TRACK;
-  plr_set_track(&command.data.track,
-                plr_curr_track + 1,
-                plr_playlist[plr_curr_track],
-                0);
-  comm_send(plr_write_to_out, &command);
-  kill(out_pid, SIGUSR1);
+    /* Track has to be opened before plr_track_duration() is able to return
+     * the duration value. */
+    plr_open(plr_playlist[plr_curr_track]);
 
-  plr_open(plr_playlist[plr_curr_track]);
+    Comm command;
+    command.code = TRACK;
+    plr_set_track(&command.data.track,
+                  plr_curr_track + 1,
+                  plr_playlist[plr_curr_track],
+                  plr_track_duration());
+    comm_send(plr_write_to_out, &command);
+    kill(out_pid, SIGUSR1);
 }
 
 static inline void plr_load_lib() {
@@ -49,6 +51,7 @@ static inline void plr_load_lib() {
     plr_previous = ff_previous;
     plr_repeat = ff_repeat;
     plr_seek = ff_seek;
+    plr_track_duration = ff_track_duration;
 }
 
 void plr_set_track(Track *track,

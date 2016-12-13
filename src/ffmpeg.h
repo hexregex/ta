@@ -12,4 +12,6 @@ void ff_previous();
 void ff_repeat();
 void ff_seek();
 
+int ff_track_duration();
+
 #endif /* AT_FFMPEG_TA */

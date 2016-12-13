@@ -31,7 +31,6 @@ static void error_woe(const char *message)
     exit(1);
 }
 
-
 static inline
 void ff_error_woe(int error)
 {
@@ -68,9 +67,10 @@ int ff_get_audio_stream(AVFormatContext *format_context)
 }
 
 
-static AVFormatContext *container = NULL;
+
+static AVFormatContext *format_context = NULL;
 static int stream_id;
-static AVCodecContext *ctx = NULL;
+static AVCodecContext *codec_context = NULL;
 
 static ao_sample_format sformat;
 static ao_device *adevice = NULL;
@@ -89,51 +89,59 @@ void ff_init()
 
 void ff_dest()
 {
-    if (container != NULL)
-        avformat_close_input(&container);
+    if (format_context != NULL)
+        avformat_close_input(&format_context);
 
     ao_shutdown();
 }
 
+int ff_track_duration()
+{
+    if (format_context == NULL)
+        return 0;
+
+    return (int)av_q2d(av_mul_q((AVRational){format_context->duration, 1},
+                                AV_TIME_BASE_Q));
+}
 
 /* Load an audio file. */
 void ff_open(const char *in_filename) {
 
-    if (container != NULL)
-        avformat_close_input(&container);
+    if (format_context != NULL)
+        avformat_close_input(&format_context);
 
-    container = avformat_alloc_context();
+    format_context = avformat_alloc_context();
 
     /* Open the media file. */
-    ff_error_woe( avformat_open_input(&container, in_filename, NULL, NULL) );
+    ff_error_woe( avformat_open_input(&format_context, in_filename, NULL, NULL) );
 
     /* Get information about the media stream. */
-    ff_error_woe( avformat_find_stream_info(container, NULL) );
+    ff_error_woe( avformat_find_stream_info(format_context, NULL) );
 
     /* TODO: Figure out how to redirect this out put to output module. */
     /* Output stream info to stderr */
-    /* av_dump_format(container,0,in_filename,0); */
+    /* av_dump_format(format_context,0,in_filename,0); */
 
-    stream_id = ff_get_audio_stream(container);
+    stream_id = ff_get_audio_stream(format_context);
 
     /* TODO: Is this used by anything? */
-    /* AVDictionary *metadata = container->metadata; */
+    /* AVDictionary *metadata = format_context->metadata; */
 
-    ctx = container->streams[stream_id]->codec;
-    AVCodec *codec = avcodec_find_decoder( ctx->codec_id );
+    codec_context = format_context->streams[stream_id]->codec;
+    AVCodec *codec = avcodec_find_decoder( codec_context->codec_id );
     if (codec == NULL) error_woe("FFmpeg Error: Codec is not supported.");
 
     /* Open the codec */
-    if ( avcodec_open2(ctx, codec, NULL) < 0 )
+    if ( avcodec_open2(codec_context, codec, NULL) < 0 )
         error_woe("Codec cannot be found.");
 
     /* TODO: Is this required? */
-    /* ctx=avcodec_alloc_context3(codec); */
+    /* codec_context=avcodec_alloc_context3(codec); */
 
     /* TODO: Switched to get rid of warnings.  See if I can get to work
      * with enumerated type. */
-    /* enum AVSampleFormat sfmt = ctx->sample_fmt; */
-    int sfmt = ctx->sample_fmt;
+    /* enum AVSampleFormat sfmt = codec_context->sample_fmt; */
+    int sfmt = codec_context->sample_fmt;
     switch (sfmt)
     {
         case AV_SAMPLE_FMT_U8:
@@ -150,8 +158,8 @@ void ff_open(const char *in_filename) {
             break;
     }
 
-    sformat.channels = ctx->channels;
-    sformat.rate = ctx->sample_rate;
+    sformat.channels = codec_context->channels;
+    sformat.rate = codec_context->sample_rate;
     sformat.byte_format = AO_FMT_NATIVE;
     sformat.matrix = "L,R";
     /* sformat.matrix = 0; */
@@ -177,22 +185,22 @@ void ff_play()
     packet->data = buffer;
 
     /* TODO: Add error detection. */
-    /* if (container == NULL) return -5; */
+    /* if (format_context == NULL) return -5; */
     int frameFinished = 0;
-    while ( av_read_frame(container, packet) >= 0 )
+    while ( av_read_frame(format_context, packet) >= 0 )
     {
         if (packet->stream_index == stream_id)
         {
             /* TODO: Add error detection. */
-            /* if (ctx == NULL) return -4; */
+            /* if (codec_context == NULL) return -4; */
             /* int len = */
-            avcodec_decode_audio4(ctx, frame, &frameFinished, packet);
+            avcodec_decode_audio4(codec_context, frame, &frameFinished, packet);
 
             /* TODO seems like a waste of processing time to convert a
                rational number to a double every pass through the loop.
                See if I can optimize somehow. */
             plr_play_time =
-                av_q2d( av_mul_q(container->streams[stream_id]->time_base,
+                av_q2d( av_mul_q(format_context->streams[stream_id]->time_base,
                                  (AVRational){ packet->pts, 1 }) );
 
             if (frameFinished)
@@ -240,10 +248,10 @@ void ff_seek(int seconds)
     int64_t seek_pos =
         seconds
         * (int64_t)av_q2d(av_div_q( (AVRational){1, 1},
-                                    container->streams[stream_id]->time_base ))
+                                    format_context->streams[stream_id]->time_base ))
         + packet->pts;
 
-    av_seek_frame( container,
+    av_seek_frame( format_context,
                    stream_id,
                    seek_pos,
                    (seconds < 0) ? AVSEEK_FLAG_BACKWARD : 0 );

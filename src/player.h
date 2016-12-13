@@ -49,6 +49,7 @@ void (*plr_next)();
 void (*plr_previous)();
 void (*plr_repeat)();
 void (*plr_seek)(int);
+int (*plr_track_duration)();
 
 void plr_set_track(Track *track,
                    int track_number,
