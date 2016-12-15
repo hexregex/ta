@@ -3,9 +3,9 @@
 
 #include "communicate.h"
 
-int log_write(const char *log_message);
-int log_write_int(const char *log_message, int value);
-int log_write_comm(const Comm *command);
+void log_write(const char *log_message);
+void log_write_int(const char *log_message, int value);
+void log_write_comm(const Comm *command);
 void log_write_array_of_strings(const char **abc);
 
 #endif /* AT_LOG_TA */
