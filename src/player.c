@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <pthread.h>
+#include <string.h>
 
 #include "ta.h"
 #include "player.h"
@@ -124,7 +125,7 @@ void plr_other_sig_handler() {
             plr_open_curr_track();
             break;
         case SEEK:
-            plr_seek(command.data.i);
+            plr_seek(command.data.seconds);
             break;
     }
 }

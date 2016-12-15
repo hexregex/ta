@@ -7,29 +7,27 @@
 #include "log.h"
 
 /* Create a pipe.  'read' points to an int which is given the value of the
-   file descriptor used to read from the pipe.  'write' points to an int which
-   is given the value of the file descriptor used to write to the pipe.
-   to the pipe with. */
+ * file descriptor used to read from the pipe.  'write' points to an int which
+ * is given the value of the file descriptor used to write to the pipe.
+ * to the pipe with. */
 void comm_connect(int *fd_read, int *fd_write)
 {
-  /* file descriptors */;
-  int fildes[2];
-  int status;
+    /* file descriptors */;
+    int fildes[2];
+    int status;
 
-  status = pipe(fildes);
-  if (status == -1)
-  {
-    /* TODO: Error creating pipe. handle error */
+    status = pipe(fildes);
+    if (status == -1)
+        /* TODO: Error creating pipe. handle error */
     return;
-  }
 
-  *fd_read = fildes[0];
-  *fd_write = fildes[1];
+    *fd_read = fildes[0];
+    *fd_write = fildes[1];
 
-  log_write("**************************");
-  log_write_int("", *fd_read);
-  log_write_int("", *fd_write);
-  log_write("**************************");
+    log_write("**************************");
+    log_write_int("", *fd_read);
+    log_write_int("", *fd_write);
+    log_write("**************************");
 }
 
 void comm_send(int pipe, const Comm *command) {
@@ -37,7 +35,8 @@ void comm_send(int pipe, const Comm *command) {
 
     if (command == NULL)
     {
-      /* TODO: What is best way to handle? */
+        log_write(">>>>>>>>>>>>>>>>>>>>>>ALERT<<<<<<<<<<<<<<<<<<<<<<\ncomm_send() received NULL value for Comm *command.");
+        return;
     }
 
     write(pipe, command, sizeof(Comm));

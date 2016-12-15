@@ -75,7 +75,7 @@ void ta_signal_player_seek(pthread_t pt_id, int seconds)
 {
     Comm command;
     command.code = SEEK;
-    command.data.i = seconds;
+    command.data.seconds = seconds;
     comm_send(ta_write_to_plr, &command);
     pthread_kill(pt_id, SIGUSR2);
 }

@@ -89,6 +89,8 @@ InCode tios_keypress()
     char string[8];
     memset(string, 0, 8);
     int old_file_flags = fcntl(STDIN_FILENO, F_GETFL);
+    /* Make sure that read blocking is already on. */
+    fcntl(STDIN_FILENO, F_SETFL, old_file_flags && ~O_NONBLOCK);
     /* Wait to read one character from stdin. */
     read(STDIN_FILENO, string, 1);
     /* Set file status flags on stdin so read() won't wait for input. */
