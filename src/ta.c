@@ -15,19 +15,21 @@
 #include "communicate.h"
 #include "log.h"
 
-/* macros for signaling player based on keypress. */
+/* Macros for signaling player based on keypress. */
 #define ta_either_keypress(in_code_1, in_code_2) \
     (ta_keypress(in_code_1) || ta_keypress(in_code_2))
+
 #define ta_keypress(in_code) \
     ((InCode)command.code == in_code)
-#define ta_signal_player(play_comm, signal)     \
+
+#define ta_signal_player(play_comm, signal) \
 do                                           \
-{                                            \
-    Comm command2;                           \
-    command2.code = play_comm;               \
-    comm_send(ta_write_to_plr, &command2); \
-    pthread_kill(plr_thread_id, signal);     \
-}                                            \
+{                                             \
+    Comm command2;                             \
+    command2.code = play_comm;                  \
+    comm_send(ta_write_to_plr, &command2);       \
+    pthread_kill(plr_thread_id, signal);          \
+}                                                  \
 while (0)
 /* ^ Do-while swallows trailing semicolon, preventing extra null statment. */
 
@@ -37,20 +39,16 @@ pid_t ta_fork_me(void (*go)())
 {
     pid_t pid = fork();
     if (pid == 0)
-    {
-        /* Executing the child process. */
+    {   /* Executing the child process. */
         go();
-        /* TODO: What should the child process return? */
-        /* It shouldn't matter because the 'go' functions
-          should only return on program termination. */
+        /* TODO: What should the child process return?
+         * Does it matter what the child process returns? */
         return 0;
     }
-    else
-        /* Executing the parent process. */
+    else /* Executing the parent process. */
         return pid;
-
-    /* TODO: Add error checking if process cannot be forked */
-    /* pid returned to parent would be -1 so check errno */
+    /* TODO: Add error checking if process cannot be forked.
+     * pid returned to parent would be -1 so check errno     */
 }
 
 
@@ -60,6 +58,7 @@ void ta_dest(pid_t in_pid, pid_t out_pid, pthread_t plr_thread_id)
 {
     /* TODO: send catchable signals to input, output, and player, and make
      * them terminate gracefully. */
+
     /* kill input process */
     kill(in_pid, SIGKILL);
     /* kill output process */
@@ -82,6 +81,12 @@ void ta_signal_player_seek(pthread_t pt_id, int seconds)
 
 int main (int argc, char **argv)
 {
+    if (argc <= 1)
+    {   /* No file names input. Nothing to play. Terminate.*/
+        /* TODO: Output command usage info to terminal before terminating. */
+        exit(1);
+    }
+
     /* Create pipe from input to main then fork input process. */
     comm_connect(&ta_read_from_in, &in_write_to_ta);
     pid_t in_pid = ta_fork_me(&in_process_go);
@@ -96,31 +101,23 @@ int main (int argc, char **argv)
     /* Create pipe from main to player. */
     comm_connect(&plr_read_from_ta, &ta_write_to_plr);
 
-    /* TODO: Free up file descriptors
-       which are not used by this process. */
+    /* TODO: Free up file descriptors which are not used by this process. */
 
     log_write_int("out pid", out_pid);
 
+
     /* Pack data to send to the player thread. */
     PlrThreadData plr_thread_data = { out_pid, {NULL} };
-
     /* TODO: Quick and dirty, improve this section. */
-    if (argc > 1)
+    /* TODO: Verify that the files input are audio files.  Play only the
+     * audio files and ignore the rest. */
+    int i;
+    for (i = 0; i < MAX_FILES; i++)
     {
-        int i;
-        for (i = 0; i < MAX_FILES; i++)
-        {
-            /* TODO: find out if array elements which are pointers are
-               automatically initialized to NULL or not. */
-            /* argv[1] is the first command line argument. */
-            plr_thread_data.file_names[i] = (i < argc - 1) ? argv[i + 1] : NULL;
-        }
-    }
-    else
-    {
-        /* Default for local development and testing. */
-        plr_thread_data.file_names[0] = "/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./10.Happy_Returns.flac";
-        plr_thread_data.file_names[1] = "/home/acalder/music/Steven_Wilson/Hand._Cannot._Erase./11.Ascendant_Here_On....flac";
+        /* TODO: find out if array elements which are pointers are
+           automatically initialized to NULL or not. */
+        /* argv[1] is the first command line argument. */
+        plr_thread_data.file_names[i] = (i < argc - 1) ? argv[i + 1] : NULL;
     }
 
     /* Spawn player thread. */
@@ -135,8 +132,8 @@ int main (int argc, char **argv)
     command.code = LOAD_TRACK_LIST;
     command.data.count = argc - 1;
     comm_send(ta_write_to_out, &command);
-    int i;
-    for(i = 1; i < argc; i++)
+
+    for (i = 1; i < argc; i++)
     {
         command.code = LOAD_TRACK;
         plr_set_track(&command.data.track, i, argv[i], 0);

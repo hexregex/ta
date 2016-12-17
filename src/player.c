@@ -11,6 +11,7 @@
 #include "communicate.h"
 #include "log.h"
 
+/* TODO: Define this elsewhere. */
 #define USE_FFMPEG
 #ifdef USE_FFMPEG
 #include "ffmpeg.h"
@@ -67,6 +68,8 @@ void plr_set_track(Track *track,
 
 void plr_pause_sig_handler()
 {
+    /* TODO: This mechanism for implementing pause is clumsy and probably bug
+     * prone.  Think up a better solution. */
     log_write("plr_pause_sig_handler-comm_recv--start");
     Comm command;
     comm_recv(plr_read_from_ta, &command);
@@ -81,16 +84,16 @@ void plr_pause_sig_handler()
      * Wait for another pause signal then resume playback. *
      *******************************************************/
     /* Wait here until another pause signal is pending (it will be blocked),
-       then remove the pause signal from the list of pending signals (so this
-       handler function won't be called again immediately on exit). */
+     * then remove the pause signal from the list of pending signals (so this
+     * handler function won't be called again immediately on exit). */
     sigwait(&ss, &sig);
     log_write("second comm_recv start");
     /* Next remove from the pipe the command which was sent before the signal
-       just removed was generated (both by main). */
+     * just removed was generated (both by main). */
     comm_recv(plr_read_from_ta, &command);
     /* Finally exit this handler function allowing the player thread to resume
-       execution where the (previous pause) signal which invoked this handler
-       was caught. (Resume audio playback.) */
+     * execution where the (previous pause) signal which invoked this handler
+     * was caught. (Resume audio playback.) */
 }
 
 static inline void plr_set_track_count()
@@ -102,6 +105,10 @@ static inline void plr_set_track_count()
 
 static inline void plr_move_to_track(int track)
 {
+    /* TODO: Currently the playlist will play repeatedly, looping forever.
+     * Add mechanism for determining if the track being equal to or greater
+     * than plr_track_count was caused by a keypress or by the last track in
+     * the playlist being played (in which playback should cease). */
     plr_curr_track = (track >= 0)
         ? ( (track < plr_track_count) ? track : 0 )
         : plr_track_count - 1 ;
@@ -114,7 +121,7 @@ void plr_other_sig_handler() {
     /* TODO: When doing these operations I need to flush the buffer containing
        the PCM audio so that little blurbs already read into the buffer before
        this signal is caught will not be played before proceeding to play the
-       next or previous track */
+       next or previous track. */
     switch (command.code) {
         case PREVIOUS:
             plr_move_to_prev_track();
@@ -130,10 +137,10 @@ void plr_other_sig_handler() {
     }
 }
 
-
 /* Set up signal handler to catch user signal from main. */
 static inline void plr_sig_init()
 {
+    /* Signal handler for pause. */
     struct sigaction sa_pause;
     sa_pause.sa_handler = plr_pause_sig_handler;
     /* Block no signals (except SIGUSR1) while the signal handler is running. */
@@ -142,6 +149,7 @@ static inline void plr_sig_init()
     sa_pause.sa_flags = SA_RESTART;
     sigaction(SIGUSR1, &sa_pause, NULL);
 
+    /* Signal handler for other operations. */
     struct sigaction sa_other;
     sa_other.sa_handler = plr_other_sig_handler;
     /* Block all signals while the signal handler is running. */
@@ -153,10 +161,11 @@ static inline void plr_sig_init()
 
 void *plr_time_thread_go()
 {
+    /* TODO: Improve this mechanism. */
     /* Setting to -1 always forces 0 value draw at beginning. */
     plr_sec_play_time = -1;
 
-    for (;;)
+    while (1)
     {
         /* When the the play time value reaches the next whole second
          * signal the main module to update the play time display. */
@@ -170,8 +179,8 @@ void *plr_time_thread_go()
             kill(out_pid, SIGUSR1);
         }
         /* TODO: Add a delay.  Literally make this thread stop for a short
-         * time, otherwise this thread just wastes CPU processing time. */
-        /* Maybe give thread lower processing priority? */
+         * time, otherwise this thread just wastes CPU processing time.
+         * Maybe give thread lower processing priority? */
     }
 }
 
@@ -195,9 +204,9 @@ void *plr_thread_go(void *thread_arg)
     plr_load_lib();
     plr_init();
 
-    /* TODO: Currently plr_curr_track is the
-       actual track number minus one.  I
-       should probably fix. */
+    /* TODO: Currently plr_curr_track is the actual track number minus one.
+     * Maybe I need to make them the same value. */
+
     /* Spawn thread to keep track of play timer. */
     pthread_t plr_time_thread_id;
     pthread_create(&plr_time_thread_id, NULL, &plr_time_thread_go, NULL);

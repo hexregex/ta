@@ -6,7 +6,8 @@
 
 #define MAX_FILES 64
 
-/* Global value for the current play time in seconds*/
+/* TODO. Do I really need these globals? */
+/* Global value for the current play time in seconds. */
 long plr_sec_play_time;
 
 /* Global value for (much more) precise play time in float */

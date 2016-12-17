@@ -53,9 +53,9 @@ InCode in_str_to_code(const char *in_str)
             case 'D': return LEFT;
             default : return NOP;
         }
-    } /* Get keypresses from keys which send single characters. */
+    }
     else if (str_len == 1)
-    {
+    {   /* Get keypresses from keys which send single characters. */
         switch (in_str[0])
         {
             case ' ': return SPACE;

@@ -19,7 +19,7 @@ void comm_connect(int *fd_read, int *fd_write)
     status = pipe(fildes);
     if (status == -1)
         /* TODO: Error creating pipe. handle error */
-    return;
+        return;
 
     *fd_read = fildes[0];
     *fd_write = fildes[1];

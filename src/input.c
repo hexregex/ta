@@ -9,13 +9,17 @@
 #include "communicate.h"
 #include "log.h"
 
+/* TODO: Finish this early work done which was never completed. */
+/*
 struct opmap {
     int keypress;
     char code[5];
 };
 
 void load_keymap () {
+*/
     /* char * line[1024]; */
+/*
     FILE *key_map_stream = fopen("key_file", "r");
     int next_char;
     int i;
@@ -26,22 +30,24 @@ void load_keymap () {
     {
     }
     while (next_char != '\0');
-
+*/
     /*opmap ops[6];*/
-
+/*
     fclose(key_map_stream);
 }
+*/
 
-
-void in_process_go() {
+void in_process_go()
+{
     void *dynahand = NULL;
+
     void (*in_init)();
     char (*in_keypress)();
     void (*in_dest)();
 
     /* The following section (until while) dynamically loads the
-       libtermios_input library and links the functions needed.
-       (Dynamic loading and linking at runtime: implementing a plug-in.) */
+     * libtermios_input library and links the functions needed.
+     * (Dynamic loading and linking at runtime: implementing a plug-in.) */
 
     /* TODO make the selection of input library to load conditional. */
     dlerror();
@@ -60,7 +66,8 @@ void in_process_go() {
     if (in_keypress == NULL)
         log_write(dlerror());
 
-    while (1) {
+    while (1)
+    {
         log_write("input_while-start");
 
         /* Wait for input then send input code to main. */
@@ -78,6 +85,6 @@ void in_process_go() {
     else
         in_dest();
 
-    if(dlclose(dynahand) != 0)
+    if (dlclose(dynahand) != 0)
         log_write(dlerror());
 }

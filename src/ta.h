@@ -1,16 +1,22 @@
 #ifndef AT_TA_TA
 #define AT_TA_TA
 
-/* File descriptors for the communication pipes.
- * 'ta' == main, 'in' == input, 'out' == output, 'plr' == player */
-                       /* ___________________    */
-int ta_read_from_in;   /* | read from input |  4 */
-int in_write_to_ta;    /* |_________________|  5 */
-int out_read_from_ta;  /* | write to output |  6 */
-int ta_write_to_out;   /* | _ _ _ _ _ _ _ _ |  7 */
-int out_read_from_plr; /* |  (from player)  |  8 */
-int plr_write_to_out;  /* |_________________|  9 */
-int plr_read_from_ta;  /* | write to player |  10 */
-int ta_write_to_plr;   /* |_________________| 11 */
+/* File descriptors for the communication pipes between modules.
+ * The numbers indicate the probable values assigned.
+ * 'ta' == main, 'in' == input, 'out' == output, 'plr' == player
+.__________________________________________________,
+|*/  int ta_read_from_in;   /*  4| read from input |\
+|*/  int in_write_to_ta;    /*  5|_________________| \
+|*/  int out_read_from_ta;  /*  6| write to output |\ |
+|*/  int ta_write_to_out;   /*  7| _ _ _ _ _ _ _ _ | \|
+|*/  int out_read_from_plr; /*  8|  (from player)  |. |
+|*/  int plr_write_to_out;  /*  9|_________________| .|
+|*/  int plr_read_from_ta;  /* 10| write to player |\ |
+|*/  int ta_write_to_plr;   /* 11|                 | \|
+|________________________________|_________________|  |
+ \                                \                 \ |
+  \________________________________\_________________\|
 
-#endif /* AT_TA_TA */
+       */
+#endif /* AT_TA_TA
+     */

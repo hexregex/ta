@@ -24,9 +24,9 @@ static void (*out_operation)(OutCode operation);
 
 static void out_play_time(int seconds)
 {
-  char time_str[12];
-  seconds_to_str(time_str, seconds);
-  out_play_time_str(time_str);
+    char time_str[12];
+    seconds_to_str(time_str, seconds);
+    out_play_time_str(time_str);
 }
 
 static inline void out_load_lib() {
@@ -49,9 +49,9 @@ void seconds_to_str(char *str, int val)
 
     /* TODO: Improve the output format. */
     if (val > 0)
-      sprintf(str, "%2i:%02i:%02i", val, min, sec);
+        sprintf(str, "%2i:%02i:%02i", val, min, sec);
     else
-      sprintf(str, "%5i:%02i", min, sec);
+        sprintf(str, "%5i:%02i", min, sec);
 }
 
 static inline

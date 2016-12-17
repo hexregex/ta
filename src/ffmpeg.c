@@ -21,6 +21,17 @@
 #define AVCODEC_MAX_AUDIO_FRAME_SIZE 192000
 #define BUFFER_SIZE AVCODEC_MAX_AUDIO_FRAME_SIZE + FF_INPUT_BUFFER_PADDING_SIZE
 
+
+static AVFormatContext *format_context = NULL;
+static int stream_id;
+static AVCodecContext *codec_context = NULL;
+
+static ao_sample_format sformat;
+static ao_device *adevice = NULL;
+static AVPacket p;
+static AVPacket *packet = &p; /* Never use variable p again */
+
+
 static void error_woe(const char *message)
 {
     char *buffer;
@@ -34,15 +45,15 @@ static void error_woe(const char *message)
 static inline
 void ff_error_woe(int error)
 {
-  if (error != 0)
-  {
-    char err_str[ERR_BUFF_SIZE];
+    if (error != 0)
+    {
+        char err_str[ERR_BUFF_SIZE];
 
-    /* Get back error string from FFmpeg */
-    av_strerror(error, err_str, ERR_BUFF_SIZE);
+        /* Get back error string from FFmpeg */
+        av_strerror(error, err_str, ERR_BUFF_SIZE);
 
-    error_woe(err_str);
-  }
+        error_woe(err_str);
+    }
 }
 
 static inline
@@ -66,23 +77,9 @@ int ff_get_audio_stream(AVFormatContext *format_context)
     return stream;
 }
 
-
-
-static AVFormatContext *format_context = NULL;
-static int stream_id;
-static AVCodecContext *codec_context = NULL;
-
-static ao_sample_format sformat;
-static ao_device *adevice = NULL;
-static AVPacket p;
-static AVPacket *packet = &p; /* Never use variable p again */
-
-
 void ff_init()
-{
-    /* Register all the codecs. */
+{   /* Register all the codecs. */
     av_register_all();
-
     /* Initialize the AO library */
     ao_initialize();
 }
@@ -105,8 +102,8 @@ int ff_track_duration()
 }
 
 /* Load an audio file. */
-void ff_open(const char *in_filename) {
-
+void ff_open(const char *in_filename)
+{
     if (format_context != NULL)
         avformat_close_input(&format_context);
 
@@ -138,8 +135,8 @@ void ff_open(const char *in_filename) {
     /* TODO: Is this required? */
     /* codec_context=avcodec_alloc_context3(codec); */
 
-    /* TODO: Switched to get rid of warnings.  See if I can get to work
-     * with enumerated type. */
+    /* TODO: Switched to int type get rid of warnings.  See if I can get it to
+     * work with the original enumerated type without warnings. */
     /* enum AVSampleFormat sfmt = codec_context->sample_fmt; */
     int sfmt = codec_context->sample_fmt;
     switch (sfmt)
@@ -216,26 +213,16 @@ void ff_play()
     av_frame_free(&frame);
 }
 
-void ff_pause()
-{
-}
+void ff_pause() { }
 
+void ff_next() { }
 
-void ff_next()
-{
-}
+void ff_previous() { }
 
-void ff_previous()
-{
-}
-
-void ff_repeat()
-{
-}
+void ff_repeat() { }
 
 void ff_seek(int seconds)
 {
-
     /* TODO:  Occasionally this operation causes a segfault.  Probably
      * something below (likely in av_seek_frame) which changes a value,
      * reallocates memory, or changes a pointer.  When the signal
@@ -255,7 +242,4 @@ void ff_seek(int seconds)
                    stream_id,
                    seek_pos,
                    (seconds < 0) ? AVSEEK_FLAG_BACKWARD : 0 );
-
 }
-
-
