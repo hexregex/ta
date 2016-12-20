@@ -1,4 +1,18 @@
-/*  This file (ncurses.h) is part of the ta application.
+#!/bin/sh
+# This script inserts GNU V2 license info at the top of the source files.
+#
+# Currently this script inserts new license info with no regard for any
+# license info already inserted by running this script.
+# TODO: Alter script to remove any license info from the top of the source file
+# before inserting a second time.
+
+source_dir='../src'
+(find "$source_dir" -name *.c; find "$source_dir" -name *.h) \
+| while read file_path; do
+    file_name=$(basename "$file_path")
+
+    new=$(cat << TEMPLATE
+/*  This file ($file_name) is part of the ta application.
     Copyright (C) 2016-2017 Aaron Calder
 
     This program is free software; you can redistribute it and/or modify
@@ -15,18 +29,8 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
-#ifndef AT_NCURSES_TA
-#define AT_NCURSES_TA
+TEMPLATE
+    cat "$file_path")
 
-#include "communicate.h"
-#include "output.h"
-
-void nc_init();
-void nc_dest();
-
-void nc_play_time_str(const char *time_str);
-void nc_track_list(Track *track_list, int track_count);
-void nc_track(Track *track);
-void nc_operation(OutCode operation);
-
-#endif /* AT_NCURSES_TA */
+    echo "$new" > "$file_path"
+done
