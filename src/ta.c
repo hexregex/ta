@@ -108,6 +108,8 @@ int main (int argc, char **argv)
     comm_connect(&ta_read_from_in, &in_write_to_ta);
     pid_t in_pid = ta_fork_me(&in_process_go);
 
+    log_write_int("input forked. pid=", in_pid);
+
     /* Create pipe from main to output. */
     comm_connect(&out_read_from_ta, &ta_write_to_out);
     /* Create pipe from player to output. */
@@ -115,12 +117,13 @@ int main (int argc, char **argv)
     /* Fork output process */
     pid_t out_pid = ta_fork_me(&out_process_go);
 
+    log_write_int("output forked. pid=", out_pid);
+
     /* Create pipe from main to player. */
     comm_connect(&plr_read_from_ta, &ta_write_to_plr);
 
     /* TODO: Free up file descriptors which are not used by this process. */
 
-    log_write_int("out pid", out_pid);
 
 
     /* Pack data to send to the player thread. */

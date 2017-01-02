@@ -182,6 +182,8 @@ void *plr_time_thread_go()
     /* Setting to -1 always forces 0 value draw at beginning. */
     plr_sec_play_time = -1;
 
+    /* log_write_int("plr_time_thread_go pid:", ); */
+
     while (1)
     {
         /* When the the play time value reaches the next whole second
@@ -227,7 +229,7 @@ void *plr_thread_go(void *thread_arg)
     /* Spawn thread to keep track of play timer. */
     pthread_t plr_time_thread_id;
     pthread_create(&plr_time_thread_id, NULL, &plr_time_thread_go, NULL);
-    log_write("play thread has been spawned");
+    log_write_int("play thread has been spawned. pid=", plr_time_thread_id);
 
     while (plr_curr_track < plr_track_count)
     {

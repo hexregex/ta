@@ -178,14 +178,23 @@ void ff_open(const char *in_filename)
     sformat.matrix = "L,R";
     /* sformat.matrix = 0; */
 
-    int driver = ao_default_driver_id();
-    adevice = ao_open_live(driver, &sformat, NULL);
-    int error = errno;
-    if (adevice == NULL)
-    {
-        log_write_int("libao error number", error);
-    }
+    /* TODO: Detect if the format has changed since the previous track then
+     * restart audio device or somehow update the format of the currently
+     * running audio device. */
 
+    /* Open audio device the for the first track being played. ('driver' is
+     * only assigned -1 the first time through.) */
+    static int driver = -1;
+    if (driver == -1)
+    {
+        driver = ao_default_driver_id();
+        adevice = ao_open_live(driver, &sformat, NULL);
+        int error = errno;
+        if (adevice == NULL)
+        {
+            log_write_int("libao error number", error);
+        }
+    }
 }
 
 void ff_play()
